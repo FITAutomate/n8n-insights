@@ -29,8 +29,8 @@ export function AppSidebar() {
         <Link href="/health" data-testid="link-sidebar-home">
           <div className="flex flex-col gap-2 cursor-pointer">
             <img src={logoPath} alt="Forward IT Thinking" className="h-8 w-auto self-start" />
-            <div className="flex flex-col">
-              <span className="text-sm font-semibold text-sidebar-foreground">n8n Insights</span>
+            <div className="flex flex-col items-center w-full">
+              <span className="text-sm font-semibold text-sidebar-foreground">🚦 n8n Insights</span>
               <span className="text-xs text-sidebar-foreground/60">Workflow Registry</span>
             </div>
           </div>
