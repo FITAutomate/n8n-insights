@@ -19,5 +19,7 @@ export function isConfigured(): boolean {
 }
 
 export const supabase = supabaseUrl && key
-  ? createClient(supabaseUrl, key)
+  ? createClient(supabaseUrl, key, {
+      db: { schema: "n8n_inventory" },
+    })
   : null;
