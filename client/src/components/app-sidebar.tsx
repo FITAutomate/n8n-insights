@@ -31,7 +31,7 @@ export function AppSidebar() {
               <Zap className="w-4 h-4 text-fit-navy" />
             </div>
             <div className="flex flex-col">
-              <span className="text-sm font-semibold text-sidebar-foreground">FIT Automate</span>
+              <span className="text-sm font-semibold text-sidebar-foreground">n8n-insights</span>
               <span className="text-xs text-sidebar-foreground/60">Workflow Registry</span>
             </div>
           </div>
