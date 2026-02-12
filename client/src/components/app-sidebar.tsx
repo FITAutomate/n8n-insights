@@ -1,5 +1,6 @@
 import { useLocation, Link } from "wouter";
-import { Activity, GitBranch, RefreshCw, Zap } from "lucide-react";
+import { Activity, GitBranch, RefreshCw } from "lucide-react";
+import logoPath from "@assets/logo_1770940301958.png";
 import {
   Sidebar,
   SidebarContent,
@@ -27,9 +28,7 @@ export function AppSidebar() {
       <SidebarHeader className="p-4">
         <Link href="/health" data-testid="link-sidebar-home">
           <div className="flex items-center gap-2.5 cursor-pointer">
-            <div className="flex items-center justify-center w-8 h-8 rounded-md bg-fit-green">
-              <Zap className="w-4 h-4 text-fit-navy" />
-            </div>
+            <img src={logoPath} alt="Forward IT Thinking" className="h-8 w-auto" />
             <div className="flex flex-col">
               <span className="text-sm font-semibold text-sidebar-foreground">n8n-insights</span>
               <span className="text-xs text-sidebar-foreground/60">Workflow Registry</span>
