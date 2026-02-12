@@ -35,7 +35,8 @@ export async function registerRoutes(
         try {
           const { count, error } = await supabase
             .from(name)
-            .select("*", { count: "exact", head: true });
+            .select("*", { count: "exact" })
+            .limit(1);
 
           if (error) {
             return { name, status: "error" as const, count: null, error: error.message };
