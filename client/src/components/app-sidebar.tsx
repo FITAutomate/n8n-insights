@@ -27,10 +27,10 @@ export function AppSidebar() {
     <Sidebar>
       <SidebarHeader className="p-4">
         <Link href="/health" data-testid="link-sidebar-home">
-          <div className="flex flex-col items-center gap-2 cursor-pointer">
-            <img src={logoPath} alt="Forward IT Thinking" className="h-8 w-auto" />
-            <div className="flex flex-col items-center">
-              <span className="text-sm font-semibold text-sidebar-foreground">n8n-insights</span>
+          <div className="flex flex-col gap-2 cursor-pointer">
+            <img src={logoPath} alt="Forward IT Thinking" className="h-8 w-auto self-start" />
+            <div className="flex flex-col">
+              <span className="text-sm font-semibold text-sidebar-foreground">n8n Insights</span>
               <span className="text-xs text-sidebar-foreground/60">Workflow Registry</span>
             </div>
           </div>
