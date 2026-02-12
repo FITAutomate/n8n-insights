@@ -1,0 +1,66 @@
+Build a new Replit project: Next.js 14 + TypeScript + Tailwind (App Router).
+
+Goal: Create a small “Workflow Registry” front-end that connects to Supabase and proves DB connectivity + table visibility for:
+- n8n_workflows
+- n8n_workflow_snapshots
+- n8n_workflow_nodes
+- n8n_workflow_connections
+- n8n_inventory_sync_runs
+
+Requirements:
+1) Bootstrap
+- Use Next.js App Router (app/).
+- Use Tailwind.
+- Add a simple layout with a left nav and a main content area.
+- Use server-side rendering for data reads (server components) wherever possible.
+
+2) Supabase setup
+- Install @supabase/supabase-js.
+- Create a small Supabase client utility:
+  - /lib/supabase/server.ts for server-side (uses SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY OR SUPABASE_ANON_KEY depending on what I provide)
+  - /lib/supabase/client.ts for browser-side (uses SUPABASE_URL + SUPABASE_ANON_KEY)
+- On first run, detect missing env vars and show a friendly “Setup Required” page listing what’s missing.
+- Provide an .env.example file with:
+  SUPABASE_URL=
+  SUPABASE_ANON_KEY=
+  (optional) SUPABASE_SERVICE_ROLE_KEY=
+  (optional) NEXT_PUBLIC_SUPABASE_URL=
+  (optional) NEXT_PUBLIC_SUPABASE_ANON_KEY=
+
+3) DB verification + health page
+- Create route: /health
+- It should:
+  - Query each table with `select('*', { count: 'exact', head: true })` to get row counts.
+  - Show a green/red status per table + count.
+  - If a table is missing or permission denied, show the error message.
+
+4) Core pages
+- /workflows
+  - Table listing from n8n_workflows:
+    columns: workflow_id, name, active, is_archived, updated_at, node_count, last_seen_at
+  - Search box (client-side) that filters by name.
+  - Row click goes to /workflows/[workflow_id]
+
+- /workflows/[workflow_id]
+  - Show workflow details from n8n_workflows
+  - Show recent snapshots from n8n_workflow_snapshots (latest 10 by captured_at)
+  - If snapshots exist, show a “View JSON” collapsible section for the latest snapshot’s workflow_jsonb (pretty formatted)
+
+- /sync-runs
+  - List last 25 rows from n8n_inventory_sync_runs with status, started_at, finished_at, workflows_seen, workflows_changed, snapshots_inserted
+  - If errors_jsonb exists, show expandable JSON.
+
+5) UX + safety
+- Do NOT implement auth yet (assume I’m running locally in Replit for dev).
+- If using service role key, ensure it is ONLY referenced server-side, never exposed to the browser.
+- Add clear comments explaining where to add auth later.
+- Make the UI clean and minimal.
+
+6) Deliverables
+- Working build with instructions in README:
+  - how to set env vars
+  - how to run
+  - what pages to visit first (/health then /workflows)
+- Keep the code small and easy to extend.
+
+Start by generating the project, then add the Supabase utilities, then implement /health, then the 3 core pages.
