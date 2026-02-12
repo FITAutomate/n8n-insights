@@ -59,8 +59,8 @@ export default function SyncRunsPage() {
 
 function SyncRunCard({ run }: { run: N8nInventorySyncRun }) {
   const [errorOpen, setErrorOpen] = useState(false);
-  const hasErrors = run.errors_jsonb && (
-    Array.isArray(run.errors_jsonb) ? run.errors_jsonb.length > 0 : Object.keys(run.errors_jsonb).length > 0
+  const hasErrors = run.errors_json && (
+    Array.isArray(run.errors_json) ? run.errors_json.length > 0 : Object.keys(run.errors_json).length > 0
   );
 
   return (
@@ -112,7 +112,7 @@ function SyncRunCard({ run }: { run: N8nInventorySyncRun }) {
             </CollapsibleTrigger>
             <CollapsibleContent>
               <pre className="mt-2 overflow-auto rounded-md bg-muted p-3 text-xs font-mono max-h-48">
-                {JSON.stringify(run.errors_jsonb, null, 2)}
+                {JSON.stringify(run.errors_json, null, 2)}
               </pre>
             </CollapsibleContent>
           </Collapsible>

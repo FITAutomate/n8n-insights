@@ -27,6 +27,9 @@ export interface N8nWorkflow {
   last_seen_at: string;
   tags?: string[];
   created_at?: string;
+  first_seen_at?: string;
+  soft_deleted_at?: string | null;
+  last_sync_run_id?: string | null;
 }
 
 export interface N8nWorkflowSnapshot {
@@ -64,7 +67,11 @@ export interface N8nInventorySyncRun {
   workflows_seen?: number;
   workflows_changed?: number;
   snapshots_inserted?: number;
-  errors_jsonb?: any;
+  errors_count?: number;
+  errors_json?: any;
+  trigger_source?: string;
+  notes?: string | null;
+  created_at?: string;
 }
 
 export interface TableHealth {

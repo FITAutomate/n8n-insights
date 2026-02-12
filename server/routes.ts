@@ -3,11 +3,11 @@ import { createServer, type Server } from "http";
 import { supabase, isConfigured, getEnvStatus } from "./supabase";
 
 const REQUIRED_TABLES = [
-  "n8n_workflows",
-  "n8n_workflow_snapshots",
-  "n8n_workflow_nodes",
-  "n8n_workflow_connections",
-  "n8n_inventory_sync_runs",
+  "workflows",
+  "workflow_snapshots",
+  "workflow_nodes",
+  "workflow_connections",
+  "inventory_sync_runs",
 ];
 
 export async function registerRoutes(
@@ -52,10 +52,12 @@ export async function registerRoutes(
   });
 
   app.get("/api/migrate/sql", (_req, res) => {
-    const sql = `-- FIT Automate: Create required tables for Workflow Registry
--- Run this in your Supabase SQL Editor (https://supabase.com/dashboard → SQL Editor)
+    const sql = `-- FIT Automate: Create required tables in n8n_inventory schema
+-- Run this in your Supabase SQL Editor (https://supabase.com/dashboard -> SQL Editor)
 
-CREATE TABLE IF NOT EXISTS n8n_workflows (
+CREATE SCHEMA IF NOT EXISTS n8n_inventory;
+
+CREATE TABLE IF NOT EXISTS n8n_inventory.workflows (
   workflow_id TEXT PRIMARY KEY,
   name TEXT NOT NULL DEFAULT '',
   active BOOLEAN NOT NULL DEFAULT false,
@@ -67,34 +69,34 @@ CREATE TABLE IF NOT EXISTS n8n_workflows (
   last_seen_at TIMESTAMPTZ DEFAULT now()
 );
 
-CREATE TABLE IF NOT EXISTS n8n_workflow_snapshots (
+CREATE TABLE IF NOT EXISTS n8n_inventory.workflow_snapshots (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  workflow_id TEXT NOT NULL REFERENCES n8n_workflows(workflow_id) ON DELETE CASCADE,
+  workflow_id TEXT NOT NULL REFERENCES n8n_inventory.workflows(workflow_id) ON DELETE CASCADE,
   captured_at TIMESTAMPTZ DEFAULT now(),
   workflow_jsonb JSONB,
   node_count INTEGER,
   connection_count INTEGER
 );
 
-CREATE TABLE IF NOT EXISTS n8n_workflow_nodes (
+CREATE TABLE IF NOT EXISTS n8n_inventory.workflow_nodes (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  workflow_id TEXT NOT NULL REFERENCES n8n_workflows(workflow_id) ON DELETE CASCADE,
+  workflow_id TEXT NOT NULL REFERENCES n8n_inventory.workflows(workflow_id) ON DELETE CASCADE,
   node_name TEXT NOT NULL DEFAULT '',
   node_type TEXT NOT NULL DEFAULT '',
   position_x REAL,
   position_y REAL
 );
 
-CREATE TABLE IF NOT EXISTS n8n_workflow_connections (
+CREATE TABLE IF NOT EXISTS n8n_inventory.workflow_connections (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  workflow_id TEXT NOT NULL REFERENCES n8n_workflows(workflow_id) ON DELETE CASCADE,
+  workflow_id TEXT NOT NULL REFERENCES n8n_inventory.workflows(workflow_id) ON DELETE CASCADE,
   source_node TEXT NOT NULL DEFAULT '',
   target_node TEXT NOT NULL DEFAULT '',
   source_output INTEGER DEFAULT 0,
   target_input INTEGER DEFAULT 0
 );
 
-CREATE TABLE IF NOT EXISTS n8n_inventory_sync_runs (
+CREATE TABLE IF NOT EXISTS n8n_inventory.inventory_sync_runs (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   status TEXT NOT NULL DEFAULT 'pending',
   started_at TIMESTAMPTZ DEFAULT now(),
@@ -105,12 +107,14 @@ CREATE TABLE IF NOT EXISTS n8n_inventory_sync_runs (
   errors_jsonb JSONB
 );
 
--- Create indexes for common queries
-CREATE INDEX IF NOT EXISTS idx_snapshots_workflow_id ON n8n_workflow_snapshots(workflow_id);
-CREATE INDEX IF NOT EXISTS idx_snapshots_captured_at ON n8n_workflow_snapshots(captured_at DESC);
-CREATE INDEX IF NOT EXISTS idx_nodes_workflow_id ON n8n_workflow_nodes(workflow_id);
-CREATE INDEX IF NOT EXISTS idx_connections_workflow_id ON n8n_workflow_connections(workflow_id);
-CREATE INDEX IF NOT EXISTS idx_sync_runs_started_at ON n8n_inventory_sync_runs(started_at DESC);
+-- Grant API access
+GRANT USAGE ON SCHEMA n8n_inventory TO anon, authenticated, service_role;
+GRANT SELECT ON ALL TABLES IN SCHEMA n8n_inventory TO anon, authenticated, service_role;
+
+-- Expose schema to PostgREST
+ALTER ROLE authenticator SET pgrst.db_schemas = 'public, n8n_inventory';
+NOTIFY pgrst, 'reload config';
+NOTIFY pgrst, 'reload schema';
 `;
     res.json({ sql });
   });
@@ -122,7 +126,7 @@ CREATE INDEX IF NOT EXISTS idx_sync_runs_started_at ON n8n_inventory_sync_runs(s
 
     try {
       const { data, error } = await supabase
-        .from("n8n_workflows")
+        .from("workflows")
         .select("*")
         .order("updated_at", { ascending: false });
 
@@ -142,7 +146,7 @@ CREATE INDEX IF NOT EXISTS idx_sync_runs_started_at ON n8n_inventory_sync_runs(s
 
     try {
       const { data: workflow, error: wfError } = await supabase
-        .from("n8n_workflows")
+        .from("workflows")
         .select("*")
         .eq("workflow_id", workflowId)
         .single();
@@ -150,7 +154,7 @@ CREATE INDEX IF NOT EXISTS idx_sync_runs_started_at ON n8n_inventory_sync_runs(s
       if (wfError) return res.status(404).json({ message: wfError.message });
 
       const { data: snapshots, error: snapError } = await supabase
-        .from("n8n_workflow_snapshots")
+        .from("workflow_snapshots")
         .select("*")
         .eq("workflow_id", workflowId)
         .order("captured_at", { ascending: false })
@@ -173,7 +177,7 @@ CREATE INDEX IF NOT EXISTS idx_sync_runs_started_at ON n8n_inventory_sync_runs(s
 
     try {
       const { data, error } = await supabase
-        .from("n8n_inventory_sync_runs")
+        .from("inventory_sync_runs")
         .select("*")
         .order("started_at", { ascending: false })
         .limit(25);
