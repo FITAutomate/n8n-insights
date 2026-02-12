@@ -27,9 +27,9 @@ export function AppSidebar() {
     <Sidebar>
       <SidebarHeader className="p-4">
         <Link href="/health" data-testid="link-sidebar-home">
-          <div className="flex items-center gap-2.5 cursor-pointer">
+          <div className="flex flex-col items-center gap-2 cursor-pointer">
             <img src={logoPath} alt="Forward IT Thinking" className="h-8 w-auto" />
-            <div className="flex flex-col">
+            <div className="flex flex-col items-center">
               <span className="text-sm font-semibold text-sidebar-foreground">n8n-insights</span>
               <span className="text-xs text-sidebar-foreground/60">Workflow Registry</span>
             </div>
