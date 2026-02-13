@@ -90,7 +90,9 @@ function SyncRunCard({ run }: { run: N8nInventorySyncRun }) {
           <div className="flex items-center gap-4 text-sm shrink-0">
             <Stat label="Seen" value={run.workflows_seen} />
             <Stat label="Changed" value={run.workflows_changed} />
+            <Stat label="Unchanged" value={run.workflows_unchanged} />
             <Stat label="Snapshots" value={run.snapshots_inserted} />
+            <Stat label="Duration (s)" value={run.duration_seconds} />
           </div>
         </div>
 

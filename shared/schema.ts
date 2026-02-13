@@ -1,22 +1,3 @@
-import { sql } from "drizzle-orm";
-import { pgTable, text, varchar } from "drizzle-orm/pg-core";
-import { createInsertSchema } from "drizzle-zod";
-import { z } from "zod";
-
-export const users = pgTable("users", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  username: text("username").notNull().unique(),
-  password: text("password").notNull(),
-});
-
-export const insertUserSchema = createInsertSchema(users).pick({
-  username: true,
-  password: true,
-});
-
-export type InsertUser = z.infer<typeof insertUserSchema>;
-export type User = typeof users.$inferSelect;
-
 export interface N8nWorkflow {
   workflow_id: string;
   name: string;
@@ -26,10 +7,13 @@ export interface N8nWorkflow {
   node_count: number;
   last_seen_at: string;
   tags?: string[];
+  latest_snapshot_id?: string | null;
+  latest_snapshot_captured_at?: string | null;
+  latest_definition_hash?: string | null;
+  tag_count?: number;
   created_at?: string;
   first_seen_at?: string;
   soft_deleted_at?: string | null;
-  last_sync_run_id?: string | null;
 }
 
 export interface N8nWorkflowSnapshot {
@@ -37,6 +21,13 @@ export interface N8nWorkflowSnapshot {
   workflow_id: string;
   captured_at: string;
   workflow_jsonb?: any;
+  definition_hash?: string;
+  version_id?: string;
+  version_counter?: number;
+  has_webhook_trigger?: boolean;
+  webhook_path?: string;
+  sync_run_id?: string;
+  execution_stats?: any;
   node_count?: number;
   connection_count?: number;
 }
@@ -66,7 +57,9 @@ export interface N8nInventorySyncRun {
   finished_at?: string;
   workflows_seen?: number;
   workflows_changed?: number;
+  workflows_unchanged?: number;
   snapshots_inserted?: number;
+  duration_seconds?: number;
   errors_count?: number;
   errors_json?: any;
   trigger_source?: string;
@@ -81,11 +74,31 @@ export interface TableHealth {
   error?: string;
 }
 
+export interface ViewHealth {
+  name: string;
+  status: "ok" | "error";
+  count: number | null;
+  error?: string;
+}
+
 export interface HealthCheckResponse {
   tables: TableHealth[];
+  views: ViewHealth[];
   envStatus: {
     supabaseUrl: boolean;
     supabaseAnonKey: boolean;
     supabaseServiceRoleKey: boolean;
   };
+}
+
+export interface N8nInventorySyncRunDaily {
+  day: string;
+  trigger_source: string;
+  runs_total: number;
+  runs_success: number;
+  runs_error: number;
+  workflows_seen: number;
+  workflows_changed: number;
+  snapshots_inserted: number;
+  errors_count: number;
 }

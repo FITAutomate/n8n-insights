@@ -1,5 +1,5 @@
 import { useLocation, Link } from "wouter";
-import { Activity, GitBranch, RefreshCw } from "lucide-react";
+import { Activity, GitBranch, RefreshCw, LineChart } from "lucide-react";
 import logoPath from "@assets/logo_1770940301958.png";
 import {
   Sidebar,
@@ -18,6 +18,7 @@ const navItems = [
   { title: "Health Check", url: "/health", icon: Activity },
   { title: "Workflows", url: "/workflows", icon: GitBranch },
   { title: "Sync Runs", url: "/sync-runs", icon: RefreshCw },
+  { title: "Reliability", url: "/reliability", icon: LineChart },
 ];
 
 export function AppSidebar() {

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { CheckCircle, XCircle, AlertTriangle, Database, Loader2, Copy, Check, RefreshCw } from "lucide-react";
+import { CheckCircle, XCircle, AlertTriangle, Database, Copy, Check, RefreshCw, Layers } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -15,8 +15,12 @@ export default function HealthPage() {
   });
 
   const tablesWithErrors = data?.tables.filter((t) => t.status === "error") ?? [];
+  const viewsWithErrors = data?.views.filter((v) => v.status === "error") ?? [];
   const hasMissingTables = tablesWithErrors.some(
     (t) => t.error?.includes("schema cache") || t.error?.includes("does not exist")
+  );
+  const hasMissingViews = viewsWithErrors.some(
+    (v) => v.error?.includes("schema cache") || v.error?.includes("does not exist")
   );
 
   return (
@@ -49,13 +53,13 @@ export default function HealthPage() {
               <EnvBadge label="SUPABASE_ANON_KEY" ok={data.envStatus.supabaseAnonKey} />
               <EnvBadge label="SUPABASE_SERVICE_ROLE_KEY" ok={data.envStatus.supabaseServiceRoleKey} />
             </div>
-            {(!data.envStatus.supabaseUrl || !data.envStatus.supabaseAnonKey) && (
+            {(!data.envStatus.supabaseUrl || !data.envStatus.supabaseServiceRoleKey) && (
               <div className="mt-4 flex items-start gap-2 rounded-md bg-destructive/10 p-3 text-sm text-destructive">
                 <AlertTriangle className="w-4 h-4 mt-0.5 shrink-0" />
                 <div>
                   <p className="font-medium">Setup Required</p>
                   <p className="mt-1 text-muted-foreground">
-                    Set the missing environment variables in Replit Secrets, then restart the application.
+                    Set the missing variables in your local `.env` file, then restart the server.
                   </p>
                 </div>
               </div>
@@ -128,7 +132,71 @@ export default function HealthPage() {
         </CardContent>
       </Card>
 
-      {hasMissingTables && <SetupDatabaseCard />}
+      <Card>
+        <CardHeader className="pb-3">
+          <div className="flex items-center justify-between gap-2 flex-wrap">
+            <div>
+              <CardTitle className="text-base">View Status</CardTitle>
+              <CardDescription>Row counts and connectivity for required views</CardDescription>
+            </div>
+            {data && (
+              <StatusSummary tables={data.views} />
+            )}
+          </div>
+        </CardHeader>
+        <CardContent>
+          {isLoading ? (
+            <div className="space-y-3">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="flex items-center justify-between gap-4">
+                  <Skeleton className="h-5 w-48" />
+                  <Skeleton className="h-5 w-20" />
+                </div>
+              ))}
+            </div>
+          ) : error ? (
+            <div className="flex items-center gap-2 text-destructive text-sm">
+              <XCircle className="w-4 h-4" />
+              <span>Failed to fetch health data: {(error as Error).message}</span>
+            </div>
+          ) : data ? (
+            <div className="space-y-2">
+              {data.views.map((view) => (
+                <div
+                  key={view.name}
+                  className="flex items-center justify-between gap-4 rounded-md border px-4 py-3"
+                  data-testid={`row-view-${view.name}`}
+                >
+                  <div className="flex items-center gap-3 min-w-0">
+                    {view.status === "ok" ? (
+                      <CheckCircle className="w-4 h-4 text-status-online shrink-0" />
+                    ) : (
+                      <XCircle className="w-4 h-4 text-destructive shrink-0" />
+                    )}
+                    <div className="flex items-center gap-2 min-w-0">
+                      <Layers className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
+                      <span className="font-mono text-sm truncate" data-testid={`text-view-name-${view.name}`}>{view.name}</span>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3 shrink-0">
+                    {view.status === "ok" ? (
+                      <Badge variant="secondary" data-testid={`badge-count-${view.name}`}>
+                        {view.count?.toLocaleString()} rows
+                      </Badge>
+                    ) : (
+                      <Badge variant="destructive" data-testid={`badge-error-${view.name}`}>
+                        View missing
+                      </Badge>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : null}
+        </CardContent>
+      </Card>
+
+      {(hasMissingTables || hasMissingViews) && <SetupDatabaseCard />}
     </div>
   );
 }

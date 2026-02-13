@@ -10,6 +10,7 @@ import HealthPage from "@/pages/health";
 import WorkflowsPage from "@/pages/workflows";
 import WorkflowDetailPage from "@/pages/workflow-detail";
 import SyncRunsPage from "@/pages/sync-runs";
+import ReliabilityPage from "@/pages/reliability";
 
 function Router() {
   return (
@@ -23,6 +24,7 @@ function Router() {
         {(params) => <WorkflowDetailPage workflowId={params.workflowId} />}
       </Route>
       <Route path="/sync-runs" component={SyncRunsPage} />
+      <Route path="/reliability" component={ReliabilityPage} />
       <Route component={NotFound} />
     </Switch>
   );
