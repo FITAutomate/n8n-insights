@@ -2,6 +2,7 @@
 
 ## 2026-02-13
 
+- Enhanced 7.7 notes UX with `Callout` primitives: added static and collapsible FIT-styled callouts and replaced plain list content on `/snippets` Notes tab.
 - Milestone 7.7 content primitives: added reusable `CodeBlock`, `MermaidBlock`, and `ContentTabs` components plus starter `/snippets` page with sample code/diagram/notes content.
 - Added Mermaid runtime dependency and shared snippet contract (`ContentSnippet`) for upcoming generated-content flow.
 - Added `Snippets` navigation item under `Insights`.

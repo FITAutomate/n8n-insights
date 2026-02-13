@@ -2,6 +2,7 @@ import { PageHeader } from "@/components/layout/page-header";
 import { ContentTabs } from "@/components/content/content-tabs";
 import { CodeBlock } from "@/components/content/code-block";
 import { MermaidBlock } from "@/components/content/mermaid-block";
+import { Callout } from "@/components/content/callout";
 
 const SAMPLE_PYTHON = `def sync_customers(api_client, workspace_id):
     """Pull the latest customers and push them into the automation workspace."""
@@ -39,14 +40,22 @@ export default function SnippetsPage() {
         }
         diagram={<MermaidBlock title="Pinecone assistant flow (sample)" chart={SAMPLE_MERMAID} />}
         notes={
-          <section className="fit-card fit-card-surface">
-            <h4 className="text-base font-semibold">Road to 7.7 v2</h4>
-            <ul className="mt-3 list-disc space-y-1 pl-5 text-sm text-muted-foreground">
-              <li>Generate Mermaid automatically from workflow nodes + connections.</li>
-              <li>Generate starter Python/TypeScript snippets from common node patterns.</li>
-              <li>Version snippets by workflow hash for change history.</li>
-            </ul>
-          </section>
+          <div className="space-y-4">
+            <Callout title='!!! note "Road to 7.7 v2"'>
+              <p>
+                This static callout is the dashboard equivalent of a MkDocs-style{" "}
+                <code>!!! note</code> block for persistent guidance and rollup context.
+              </p>
+            </Callout>
+
+            <Callout title='??? note "Generation backlog (expand)"' collapsible defaultOpen={false}>
+              <ul className="list-disc space-y-1 pl-5 text-sm text-foreground/90">
+                <li>Generate Mermaid automatically from workflow nodes + connections.</li>
+                <li>Generate starter Python/TypeScript snippets from common node patterns.</li>
+                <li>Version snippets by workflow hash for change history.</li>
+              </ul>
+            </Callout>
+          </div>
         }
       />
     </div>
