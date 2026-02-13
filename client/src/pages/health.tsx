@@ -49,13 +49,13 @@ export default function HealthPage() {
               <EnvBadge label="SUPABASE_ANON_KEY" ok={data.envStatus.supabaseAnonKey} />
               <EnvBadge label="SUPABASE_SERVICE_ROLE_KEY" ok={data.envStatus.supabaseServiceRoleKey} />
             </div>
-            {(!data.envStatus.supabaseUrl || !data.envStatus.supabaseAnonKey) && (
+            {(!data.envStatus.supabaseUrl || !data.envStatus.supabaseServiceRoleKey) && (
               <div className="mt-4 flex items-start gap-2 rounded-md bg-destructive/10 p-3 text-sm text-destructive">
                 <AlertTriangle className="w-4 h-4 mt-0.5 shrink-0" />
                 <div>
                   <p className="font-medium">Setup Required</p>
                   <p className="mt-1 text-muted-foreground">
-                    Set the missing environment variables in Replit Secrets, then restart the application.
+                    Set the missing variables in your local `.env` file, then restart the server.
                   </p>
                 </div>
               </div>
