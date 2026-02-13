@@ -48,12 +48,24 @@ export default function SnippetsPage() {
               </p>
             </Callout>
 
+            <Callout title='!!! tip "Good candidate for demo content"' variant="success">
+              <p>
+                Use anonymized workflow names and stable fake counts so screenshots and demos stay consistent.
+              </p>
+            </Callout>
+
             <Callout title='??? note "Generation backlog (expand)"' collapsible defaultOpen={false}>
               <ul className="list-disc space-y-1 pl-5 text-sm text-foreground/90">
                 <li>Generate Mermaid automatically from workflow nodes + connections.</li>
                 <li>Generate starter Python/TypeScript snippets from common node patterns.</li>
                 <li>Version snippets by workflow hash for change history.</li>
               </ul>
+            </Callout>
+
+            <Callout title='??? warning "Preview caveat"' variant="warning" collapsible defaultOpen={false}>
+              <p>
+                Mermaid rendering can fail on malformed graph text. Keep the fallback visible and log parse errors.
+              </p>
             </Callout>
           </div>
         }

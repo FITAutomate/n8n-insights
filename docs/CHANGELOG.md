@@ -2,6 +2,9 @@
 
 ## 2026-02-13
 
+- Added env-specific schema routing for Supabase clients (`SUPABASE_DB_SCHEMA_*`) so `demo` can use a separate schema contract without code changes.
+- Added callout variants for 7.7 notes UX (`note`, `success/tip`, `warning`, `danger`) with support for static and collapsible blocks.
+- Extended runtime environment selector and server env parsing to support `demo` mode (`dev|demo|prod`) with server-side Supabase demo overrides.
 - Enhanced 7.7 notes UX with `Callout` primitives: added static and collapsible FIT-styled callouts and replaced plain list content on `/snippets` Notes tab.
 - Milestone 7.7 content primitives: added reusable `CodeBlock`, `MermaidBlock`, and `ContentTabs` components plus starter `/snippets` page with sample code/diagram/notes content.
 - Added Mermaid runtime dependency and shared snippet contract (`ContentSnippet`) for upcoming generated-content flow.

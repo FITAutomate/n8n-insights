@@ -10,6 +10,7 @@ export function EnvironmentSelector() {
   const options = useMemo(
     () => [
       { label: "Dev", value: "dev" as const },
+      { label: "Demo", value: "demo" as const },
       { label: "Prod", value: "prod" as const },
     ],
     [],

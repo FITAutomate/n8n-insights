@@ -85,9 +85,10 @@ export interface HealthCheckResponse {
   tables: TableHealth[];
   views: ViewHealth[];
   envStatus: {
-    environment?: "dev" | "prod";
+    environment?: "dev" | "demo" | "prod";
     availableEnvironments?: {
       dev: boolean;
+      demo: boolean;
       prod: boolean;
     };
     supabaseUrl: boolean;

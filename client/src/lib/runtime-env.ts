@@ -1,8 +1,9 @@
-export type RuntimeEnv = "dev" | "prod";
+export type RuntimeEnv = "dev" | "demo" | "prod";
 
 const STORAGE_KEY = "fit-insights-runtime-env";
 
 export function normalizeRuntimeEnv(value: unknown): RuntimeEnv {
+  if (value === "demo") return "demo";
   return value === "prod" ? "prod" : "dev";
 }
 
