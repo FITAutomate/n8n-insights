@@ -5,6 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { PageHeader } from "@/components/layout/page-header";
 import type { HealthCheckResponse } from "@shared/schema";
 
 export default function HealthPage() {
@@ -24,12 +25,11 @@ export default function HealthPage() {
   );
 
   return (
-    <div className="p-6 max-w-4xl mx-auto space-y-6">
-      <div className="flex items-start justify-between gap-4 flex-wrap">
-        <div>
-          <h1 className="text-2xl font-semibold" data-testid="text-health-title">System Health</h1>
-          <p className="text-muted-foreground mt-1">Database connectivity and table status</p>
-        </div>
+    <div className="fit-page max-w-6xl space-y-6">
+      <PageHeader
+        title="System Health"
+        description="Database connectivity and table status"
+        actions={
         <Button
           variant="outline"
           size="sm"
@@ -39,7 +39,8 @@ export default function HealthPage() {
           <RefreshCw className="w-3.5 h-3.5 mr-1.5" />
           Refresh
         </Button>
-      </div>
+        }
+      />
 
       {data && (
         <Card>
@@ -49,6 +50,9 @@ export default function HealthPage() {
           </CardHeader>
           <CardContent>
             <div className="flex flex-wrap gap-3">
+              {data.envStatus.environment && (
+                <EnvBadge label={`ENV: ${data.envStatus.environment.toUpperCase()}`} ok />
+              )}
               <EnvBadge label="SUPABASE_URL" ok={data.envStatus.supabaseUrl} />
               <EnvBadge label="SUPABASE_ANON_KEY" ok={data.envStatus.supabaseAnonKey} />
               <EnvBadge label="SUPABASE_SERVICE_ROLE_KEY" ok={data.envStatus.supabaseServiceRoleKey} />

@@ -24,6 +24,12 @@ First run:
 
 - `SUPABASE_URL`
 - `SUPABASE_SERVICE_ROLE_KEY`
+- `SUPABASE_DB_SCHEMA` (default `n8n_inventory`)
+
+Optional env selector overrides:
+- `SUPABASE_URL_DEV`, `SUPABASE_SERVICE_ROLE_KEY_DEV`, `SUPABASE_DB_SCHEMA_DEV`
+- `SUPABASE_URL_DEMO`, `SUPABASE_SERVICE_ROLE_KEY_DEMO`, `SUPABASE_DB_SCHEMA_DEMO`
+- `SUPABASE_URL_PROD`, `SUPABASE_SERVICE_ROLE_KEY_PROD`, `SUPABASE_DB_SCHEMA_PROD`
 
 Optional:
 
@@ -38,6 +44,7 @@ Optional:
 - Typecheck: `npm run typecheck`
 - Lint: `npm run lint`
 - Start built app: `npm run start`
+- Playwright MCP (headless): `npm run mcp:playwright`
 
 ## Troubleshooting
 
@@ -46,6 +53,8 @@ Optional:
 - If you hit `EADDRINUSE`, the selected `PORT` is already occupied; change `PORT` in `.env` (for example `4000`) and restart.
 - PostCSS warning (`did not pass the from option`) is currently known and non-fatal in this setup.
 - API logs are minimal by default. To enable deeper payload logging temporarily, set `API_LOG_MODE=verbose` in `.env` and restart `npm run dev`.
+- Environment selector in the header persists to localStorage and sends `env=dev|demo|prod` to `/api/*`; if env-specific Supabase vars are unset, modes intentionally fall back to base dev config.
+- Backend route changes require a full `npm run dev` restart in this setup (client HMR does not reload server route code).
 
 ## Pages
 
@@ -54,6 +63,7 @@ Optional:
 - `/workflows/:workflowId`
 - `/sync-runs`
 - `/reliability`
+- `/snippets`
 
 ## Docs
 
@@ -61,3 +71,10 @@ Optional:
 - `docs/CHANGELOG.md`
 - `docs/refactor-notes.md`
 - `docs/diagrams/README.md`
+- `n8n-insights.md` (milestone tracker / execution plan)
+
+## Local MCP Setup
+
+- This repo keeps MCP config local in `.cursor/mcp.json` (the `.cursor/` folder is git-ignored by design).
+- Playwright MCP server entry (official package): `npx -y @playwright/mcp@latest`.
+- If you need to run the server manually for diagnostics, use `npm run mcp:playwright`.

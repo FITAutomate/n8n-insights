@@ -85,6 +85,12 @@ export interface HealthCheckResponse {
   tables: TableHealth[];
   views: ViewHealth[];
   envStatus: {
+    environment?: "dev" | "demo" | "prod";
+    availableEnvironments?: {
+      dev: boolean;
+      demo: boolean;
+      prod: boolean;
+    };
     supabaseUrl: boolean;
     supabaseAnonKey: boolean;
     supabaseServiceRoleKey: boolean;
@@ -101,4 +107,17 @@ export interface N8nInventorySyncRunDaily {
   workflows_changed: number;
   snapshots_inserted: number;
   errors_count: number;
+}
+
+export type SnippetType = "code" | "diagram" | "notes";
+
+export interface ContentSnippet {
+  id: string;
+  title: string;
+  type: SnippetType;
+  language?: string;
+  source?: string;
+  body: string;
+  tags?: string[];
+  updatedAt?: string;
 }

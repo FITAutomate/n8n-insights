@@ -1,9 +1,33 @@
+@import url("https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;500;600;700&family=Poppins:wght@500;600;700&display=swap");
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 /* LIGHT MODE — FIT Automate Design System */
 :root {
+  /* FIT component token layer (mapped from design.json) */
+  --fit-card-radius: 0.75rem;
+  --fit-card-padding: 2rem;
+  --fit-card-shadow: 0 10px 24px rgba(0, 68, 155, 0.10);
+  --fit-card-shadow-hover: 0 14px 28px rgba(0, 68, 155, 0.16);
+  --fit-card-hover-y: -2px;
+  --fit-card-transition: all 200ms ease-out;
+  --fit-card-border-accent: rgba(28, 208, 0, 0.40);
+  --fit-card-feature-bg: #00449B;
+  --fit-card-feature-fg: #FFFFFF;
+  --fit-card-feature-border: rgba(255, 255, 255, 0.10);
+  --fit-card-surface-bg: #FFFFFF;
+  --fit-card-surface-fg: #00003D;
+  --fit-card-surface-border: rgba(0, 124, 232, 0.15);
+  --fit-card-cta-bg: linear-gradient(180deg, rgba(0,124,232,0.95) 0%, rgba(0,0,61,1) 100%);
+  --fit-card-cta-fg: #FFFFFF;
+  --fit-card-cta-border: rgba(255, 255, 255, 0.10);
+  --fit-dark-bg: #00449B;
+  --fit-dark-surface: rgba(0, 68, 155, 0.85);
+  --fit-dark-surface-strong: rgba(0, 68, 155, 0.92);
+  --fit-dark-border: rgba(255, 255, 255, 0.16);
+
   --button-outline: rgba(0,0,0, .10);
   --badge-outline: rgba(0,0,0, .05);
   --opaque-button-border-intensity: -8;
@@ -43,7 +67,8 @@
   --chart-3: 214 100% 30%;
   --chart-4: 180 60% 35%;
   --chart-5: 260 50% 45%;
-  --font-sans: Inter, system-ui, -apple-system, sans-serif;
+  --font-heading: Poppins, sans-serif;
+  --font-sans: "Open Sans", system-ui, -apple-system, sans-serif;
   --font-serif: Georgia, serif;
   --font-mono: "JetBrains Mono", "Fira Code", Menlo, monospace;
   --radius: .5rem;
@@ -88,17 +113,23 @@
 }
 
 .dark {
+  --fit-card-shadow: 0 10px 24px rgba(0, 0, 0, 0.35);
+  --fit-card-shadow-hover: 0 16px 32px rgba(0, 0, 0, 0.45);
+  --fit-card-surface-bg: rgba(0, 68, 155, 0.85);
+  --fit-card-surface-fg: #F3F4F7;
+  --fit-card-surface-border: rgba(255, 255, 255, 0.16);
+
   --button-outline: rgba(255,255,255, .10);
   --badge-outline: rgba(255,255,255, .05);
   --opaque-button-border-intensity: 9;
   --elevate-1: rgba(255,255,255, .04);
   --elevate-2: rgba(255,255,255, .09);
-  --background: 240 50% 6%;
+  --background: 214 100% 30%;
   --foreground: 225 20% 92%;
-  --border: 240 30% 16%;
-  --card: 240 40% 9%;
+  --border: 214 60% 48%;
+  --card: 214 72% 40%;
   --card-foreground: 225 20% 92%;
-  --card-border: 240 30% 13%;
+  --card-border: 214 55% 52%;
   --sidebar: 240 60% 8%;
   --sidebar-foreground: 225 20% 90%;
   --sidebar-border: 240 40% 14%;
@@ -114,9 +145,9 @@
   --primary-foreground: 0 0% 100%;
   --secondary: 240 25% 18%;
   --secondary-foreground: 225 20% 90%;
-  --muted: 240 25% 14%;
+  --muted: 214 60% 35%;
   --muted-foreground: 220 15% 58%;
-  --accent: 240 25% 16%;
+  --accent: 214 75% 36%;
   --accent-foreground: 225 20% 90%;
   --destructive: 0 84% 32%;
   --destructive-foreground: 0 0% 98%;
@@ -173,6 +204,163 @@
   body {
     @apply font-sans antialiased bg-background text-foreground;
   }
+}
+
+@layer components {
+  .fit-app-bg {
+    background:
+      radial-gradient(circle at 100% 0%, rgba(0, 124, 232, 0.12) 0, transparent 35%),
+      radial-gradient(circle at 0% 100%, rgba(28, 208, 0, 0.10) 0, transparent 35%),
+      hsl(var(--background));
+  }
+
+  .fit-app-header {
+    @apply sticky top-0 z-40 border-b border-fit-blue/20 bg-white/90 backdrop-blur-md dark:border-fit-blue/30 dark:bg-fit-navy/85;
+  }
+
+  .fit-app-header-inner {
+    @apply flex w-full items-center justify-between px-4 py-3 sm:px-6;
+  }
+
+  .fit-app-main {
+    @apply w-full px-4 py-6 sm:px-6 sm:py-8;
+  }
+
+  .fit-page {
+    @apply w-full;
+  }
+
+  .fit-page-header {
+    @apply rounded-md border border-fit-blue/20 bg-white/75 p-4 shadow-sm sm:p-5 dark:border-fit-blue/30 dark:bg-fit-navy/45;
+  }
+
+  .fit-table-card {
+    @apply overflow-hidden border-fit-blue/20 shadow-sm;
+  }
+
+  .fit-table-card thead {
+    @apply sticky top-0 z-10 bg-fit-silver;
+  }
+
+  .fit-sidebar-brand {
+    @apply rounded-md border border-sidebar-border bg-sidebar-accent/30 p-2.5;
+  }
+
+  .fit-card {
+    border-radius: var(--fit-card-radius);
+    padding: var(--fit-card-padding);
+    box-shadow: var(--fit-card-shadow);
+    transition: var(--fit-card-transition);
+  }
+
+  .fit-card:hover {
+    transform: translateY(var(--fit-card-hover-y));
+    box-shadow: var(--fit-card-shadow-hover);
+    border-color: var(--fit-card-border-accent);
+  }
+
+  .fit-card-feature {
+    background: var(--fit-card-feature-bg);
+    color: var(--fit-card-feature-fg);
+    border: 1px solid var(--fit-card-feature-border);
+  }
+
+  .fit-card-surface {
+    background: var(--fit-card-surface-bg);
+    color: var(--fit-card-surface-fg);
+    border: 1px solid var(--fit-card-surface-border);
+  }
+
+  .fit-card-cta {
+    background: var(--fit-card-cta-bg);
+    color: var(--fit-card-cta-fg);
+    border: 1px solid var(--fit-card-cta-border);
+  }
+}
+
+.dark .fit-app-bg {
+  background:
+    radial-gradient(circle at 100% 0%, rgba(0, 124, 232, 0.20) 0, transparent 40%),
+    radial-gradient(circle at 0% 100%, rgba(28, 208, 0, 0.14) 0, transparent 40%),
+    var(--fit-dark-bg);
+}
+
+.dark .fit-app-header {
+  background-color: var(--fit-dark-surface-strong);
+  border-color: var(--fit-dark-border);
+}
+
+.dark .fit-page-header {
+  background-color: var(--fit-dark-surface);
+  border-color: var(--fit-dark-border);
+}
+
+.dark .fit-table-card {
+  background-color: var(--fit-dark-surface);
+  border-color: var(--fit-dark-border);
+}
+
+.dark .fit-table-card thead {
+  background-color: rgba(255, 255, 255, 0.08);
+}
+
+.fit-emoji-flip {
+  transform: scaleX(-1);
+}
+
+.fit-code-theme .token.comment,
+.fit-code-theme .token.prolog,
+.fit-code-theme .token.doctype,
+.fit-code-theme .token.cdata {
+  color: #7f8fa6;
+}
+
+.fit-code-theme .token.punctuation {
+  color: #cfd9ff;
+}
+
+.fit-code-theme .token.property,
+.fit-code-theme .token.tag,
+.fit-code-theme .token.boolean,
+.fit-code-theme .token.number,
+.fit-code-theme .token.constant,
+.fit-code-theme .token.symbol,
+.fit-code-theme .token.deleted {
+  color: #8be9fd;
+}
+
+.fit-code-theme .token.selector,
+.fit-code-theme .token.attr-name,
+.fit-code-theme .token.string,
+.fit-code-theme .token.char,
+.fit-code-theme .token.builtin,
+.fit-code-theme .token.inserted {
+  color: #9eff80;
+}
+
+.fit-code-theme .token.operator,
+.fit-code-theme .token.entity,
+.fit-code-theme .token.url,
+.fit-code-theme .language-css .token.string,
+.fit-code-theme .style .token.string {
+  color: #f8f8f2;
+}
+
+.fit-code-theme .token.atrule,
+.fit-code-theme .token.attr-value,
+.fit-code-theme .token.keyword {
+  color: #6cb6ff;
+}
+
+.fit-code-theme .token.function,
+.fit-code-theme .token.class-name {
+  color: #ffd479;
+}
+
+.fit-code-theme .token.regex,
+.fit-code-theme .token.important,
+.fit-code-theme .token.variable {
+  color: #ff9f7a;
 }
 
 /**

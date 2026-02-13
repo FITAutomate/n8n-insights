@@ -1,5 +1,5 @@
 import type { Express, Request } from "express";
-import { supabase, isConfigured, getEnvStatus } from "../supabase";
+import { getSupabaseClient, isConfigured, getEnvStatus, parseInventoryEnv } from "../supabase";
 
 const REQUIRED_TABLES = [
   "workflows",
@@ -35,11 +35,27 @@ function parseLimit(value: string | undefined, fallback: number, max = 500): num
   return Math.min(parsed, max);
 }
 
-export function registerInventoryRoutes(app: Express): void {
-  app.get("/api/health", async (_req, res) => {
-    const envStatus = getEnvStatus();
+function parseDayWindow(day: string | undefined): { start: string; end: string } | null {
+  if (!day) return null;
+  const match = day.match(/^(\d{4}-\d{2}-\d{2})/);
+  if (!match) return null;
+  const normalized = match[1];
+  const start = new Date(`${normalized}T00:00:00.000Z`);
+  if (Number.isNaN(start.getTime())) return null;
+  const end = new Date(start.getTime() + 24 * 60 * 60 * 1000);
+  return {
+    start: start.toISOString(),
+    end: end.toISOString(),
+  };
+}
 
-    if (!isConfigured() || !supabase) {
+export function registerInventoryRoutes(app: Express): void {
+  app.get("/api/health", async (req, res) => {
+    const environment = parseInventoryEnv(singleQueryParam(req.query.env));
+    const envStatus = getEnvStatus(environment);
+    const supabase = getSupabaseClient(environment);
+
+    if (!isConfigured(environment) || !supabase) {
       return res.json({
         tables: REQUIRED_TABLES.map((name) => ({
           name,
@@ -164,6 +180,9 @@ NOTIFY pgrst, 'reload schema';
   });
 
   app.get("/api/workflows", async (req, res) => {
+    const environment = parseInventoryEnv(singleQueryParam(req.query.env));
+    const supabase = getSupabaseClient(environment);
+
     if (!supabase) {
       return res.status(503).json({ message: "Supabase not configured" });
     }
@@ -205,6 +224,9 @@ NOTIFY pgrst, 'reload schema';
   });
 
   app.get("/api/workflows/:workflowId", async (req, res) => {
+    const environment = parseInventoryEnv(singleQueryParam(req.query.env));
+    const supabase = getSupabaseClient(environment);
+
     if (!supabase) {
       return res.status(503).json({ message: "Supabase not configured" });
     }
@@ -250,31 +272,71 @@ NOTIFY pgrst, 'reload schema';
   });
 
   app.get("/api/sync-runs", async (req, res) => {
+    const environment = parseInventoryEnv(singleQueryParam(req.query.env));
+    const supabase = getSupabaseClient(environment);
+
     if (!supabase) {
       return res.status(503).json({ message: "Supabase not configured" });
     }
 
     try {
       const daily = parseBoolean(singleQueryParam(req.query.daily)) ?? false;
+      const day = singleQueryParam(req.query.day)?.trim();
+      const triggerSource = singleQueryParam(req.query.triggerSource)?.trim();
+      const status = singleQueryParam(req.query.status)?.trim().toLowerCase();
       const limit = parseLimit(singleQueryParam(req.query.limit), daily ? 60 : 25, daily ? 365 : 200);
 
       if (daily) {
-        const { data, error } = await supabase
+        let dailyQuery = supabase
           .from("inventory_sync_runs_daily")
           .select("*")
           .order("day", { ascending: false })
           .order("trigger_source", { ascending: true })
           .limit(limit);
 
+        if (day) {
+          dailyQuery = dailyQuery.eq("day", day);
+        }
+        if (triggerSource) {
+          dailyQuery = dailyQuery.eq("trigger_source", triggerSource);
+        }
+
+        const { data, error } = await dailyQuery;
+
         if (error) return res.status(500).json({ message: error.message });
         return res.json(data ?? []);
       }
 
-      const { data, error } = await supabase
+      let runsQuery = supabase
         .from("inventory_sync_runs_enriched")
         .select("*")
         .order("started_at", { ascending: false })
         .limit(limit);
+
+      if (triggerSource) {
+        runsQuery = runsQuery.eq("trigger_source", triggerSource);
+      }
+
+      if (status) {
+        if (status === "success") {
+          runsQuery = runsQuery.in("status", ["success", "completed"]);
+        } else if (status === "error") {
+          runsQuery = runsQuery.in("status", ["error", "failed"]);
+        } else if (status === "running") {
+          runsQuery = runsQuery.in("status", ["running", "in_progress"]);
+        } else {
+          runsQuery = runsQuery.eq("status", status);
+        }
+      }
+
+      const dayWindow = parseDayWindow(day);
+      if (dayWindow) {
+        runsQuery = runsQuery
+          .gte("started_at", dayWindow.start)
+          .lt("started_at", dayWindow.end);
+      }
+
+      const { data, error } = await runsQuery;
 
       if (error) return res.status(500).json({ message: error.message });
       res.json(data ?? []);

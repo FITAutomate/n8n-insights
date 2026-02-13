@@ -1,141 +1,263 @@
-import { useState } from "react";
+import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { RefreshCw, Clock, ChevronDown, ChevronRight, AlertCircle } from "lucide-react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { useLocation, useSearch } from "wouter";
+import { AlertCircle, RefreshCw, SlidersHorizontal } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { PageHeader } from "@/components/layout/page-header";
+import { DataTableFrame } from "@/components/layout/data-table-frame";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import type { N8nInventorySyncRun } from "@shared/schema";
 
+type RunStatusFilter = "all" | "success" | "error" | "running";
+
+interface SyncRunFilters {
+  day: string;
+  triggerSource: string;
+  status: RunStatusFilter;
+}
+
+function normalizeDay(value: string | null): string {
+  if (!value) return "";
+  const match = value.match(/^(\d{4}-\d{2}-\d{2})/);
+  return match ? match[1] : "";
+}
+
+function parseFilters(search: string): SyncRunFilters {
+  const params = new URLSearchParams(search.replace(/^\?/, ""));
+  const status = params.get("status");
+  return {
+    day: normalizeDay(params.get("day")),
+    triggerSource: params.get("triggerSource") ?? "",
+    status:
+      status === "success" || status === "error" || status === "running"
+        ? status
+        : "all",
+  };
+}
+
+function buildQuery(filters: SyncRunFilters): string {
+  const query = new URLSearchParams();
+  if (filters.day) query.set("day", filters.day);
+  if (filters.triggerSource) query.set("triggerSource", filters.triggerSource);
+  if (filters.status !== "all") query.set("status", filters.status);
+  return query.toString();
+}
+
+function buildApiPath(filters: SyncRunFilters): string {
+  const value = buildQuery(filters);
+  return value ? `/api/sync-runs?${value}` : "/api/sync-runs";
+}
+
+function buildPagePath(filters: SyncRunFilters): string {
+  const value = buildQuery(filters);
+  return value ? `/sync-runs?${value}` : "/sync-runs";
+}
+
 export default function SyncRunsPage() {
-  const { data: runs, isLoading, error } = useQuery<N8nInventorySyncRun[]>({
-    queryKey: ["/api/sync-runs"],
+  const [, navigate] = useLocation();
+  const search = useSearch();
+  const filters = useMemo(() => parseFilters(search), [search]);
+  const queryPath = buildApiPath(filters);
+
+  const { data: rawRuns, isLoading, error } = useQuery<N8nInventorySyncRun[]>({
+    queryKey: [queryPath],
   });
 
+  const runs = useMemo(() => {
+    const input = rawRuns ?? [];
+    return input.filter((run) => {
+      if (filters.day) {
+        const runDay = normalizeDay(run.started_at ?? "");
+        if (runDay !== filters.day) return false;
+      }
+
+      if (filters.triggerSource) {
+        if ((run.trigger_source ?? "") !== filters.triggerSource) return false;
+      }
+
+      if (filters.status !== "all") {
+        const status = (run.status ?? "").toLowerCase();
+        if (filters.status === "success" && !["success", "completed"].includes(status)) return false;
+        if (filters.status === "error" && !["error", "failed"].includes(status)) return false;
+        if (filters.status === "running" && !["running", "in_progress"].includes(status)) return false;
+      }
+
+      return true;
+    });
+  }, [filters.day, filters.status, filters.triggerSource, rawRuns]);
+
+  const triggerSources = useMemo(() => {
+    const values = new Set<string>();
+    (rawRuns ?? []).forEach((run) => {
+      if (run.trigger_source) values.add(run.trigger_source);
+    });
+    return Array.from(values).sort((a, b) => a.localeCompare(b));
+  }, [rawRuns]);
+
+  const applyFilters = (next: Partial<SyncRunFilters>) => {
+    const merged: SyncRunFilters = { ...filters, ...next };
+    navigate(buildPagePath(merged), { replace: false });
+  };
+
+  const hasActiveFilters = filters.day || filters.triggerSource || filters.status !== "all";
+
   return (
-    <div className="p-6 max-w-5xl mx-auto space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold" data-testid="text-sync-runs-title">Sync Runs</h1>
-        <p className="text-muted-foreground mt-1">
-          {runs ? `Last ${runs.length} inventory sync runs` : "Loading..."}
-        </p>
+    <div className="fit-page space-y-6">
+      <PageHeader
+        title="Sync Runs"
+        description={runs ? `${runs.length} inventory sync runs shown` : "Loading sync runs"}
+      />
+
+      <div className="rounded-md border border-fit-blue/20 bg-white/85 p-4 shadow-sm">
+        <div className="flex items-center gap-2 text-xs font-semibold tracking-[0.08em] uppercase text-fit-blue-deep">
+          <SlidersHorizontal className="h-3.5 w-3.5" />
+          Filters
+        </div>
+
+        <div className="mt-3 grid gap-3 md:grid-cols-[220px_1fr_auto]">
+          <Input
+            type="date"
+            value={filters.day}
+            onChange={(event) => applyFilters({ day: event.target.value })}
+            data-testid="input-sync-day"
+          />
+
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="text-xs font-semibold tracking-[0.08em] uppercase text-muted-foreground">Trigger</span>
+            <FilterPill
+              active={filters.triggerSource === ""}
+              label="All"
+              onClick={() => applyFilters({ triggerSource: "" })}
+            />
+            {triggerSources.map((value) => (
+              <FilterPill
+                key={value}
+                active={filters.triggerSource === value}
+                label={value}
+                onClick={() => applyFilters({ triggerSource: value })}
+              />
+            ))}
+          </div>
+
+          <Button variant="outline" size="sm" onClick={() => navigate("/sync-runs", { replace: false })}>
+            Clear
+          </Button>
+        </div>
+
+        <div className="mt-3 flex flex-wrap items-center gap-2">
+          <span className="text-xs font-semibold tracking-[0.08em] uppercase text-muted-foreground">Status</span>
+          <FilterPill active={filters.status === "all"} label="All" onClick={() => applyFilters({ status: "all" })} />
+          <FilterPill active={filters.status === "success"} label="Success" onClick={() => applyFilters({ status: "success" })} />
+          <FilterPill active={filters.status === "error"} label="Error" onClick={() => applyFilters({ status: "error" })} />
+          <FilterPill active={filters.status === "running"} label="Running" onClick={() => applyFilters({ status: "running" })} />
+        </div>
       </div>
 
-      {isLoading ? (
-        <div className="space-y-3">
-          {[1, 2, 3, 4, 5].map((i) => (
-            <Card key={i}>
-              <CardContent className="p-4">
-                <div className="flex items-center gap-4">
-                  <Skeleton className="h-5 w-20" />
-                  <Skeleton className="h-5 flex-1" />
-                  <Skeleton className="h-5 w-24" />
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      ) : error ? (
-        <div className="text-sm text-destructive">
-          Failed to load sync runs: {(error as Error).message}
-        </div>
-      ) : runs && runs.length > 0 ? (
-        <div className="space-y-3">
-          {runs.map((run) => (
-            <SyncRunCard key={run.id} run={run} />
-          ))}
-        </div>
-      ) : (
-        <Card>
-          <CardContent className="flex flex-col items-center justify-center py-16 text-muted-foreground">
+      <DataTableFrame
+        title="Sync Run History"
+        description="View-backed run history with URL-driven drilldown filters"
+      >
+        {isLoading ? (
+          <div className="p-6 space-y-3">
+            {[1, 2, 3, 4, 5].map((i) => (
+              <Skeleton key={i} className="h-6 w-full" />
+            ))}
+          </div>
+        ) : error ? (
+          <div className="p-6 text-sm text-destructive">
+            Failed to load sync runs: {(error as Error).message}
+          </div>
+        ) : runs && runs.length > 0 ? (
+          <div className="overflow-x-auto">
+            <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Started</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead>Trigger</TableHead>
+                <TableHead className="text-right">Duration</TableHead>
+                <TableHead className="text-right">Seen</TableHead>
+                <TableHead className="text-right">Changed</TableHead>
+                <TableHead className="text-right">Unchanged</TableHead>
+                <TableHead className="text-right">Snapshots</TableHead>
+                <TableHead className="text-right">Errors</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {runs.map((run) => (
+                <TableRow key={run.id} data-testid={`row-sync-run-${run.id}`}>
+                  <TableCell>
+                    <div className="flex flex-col">
+                      <span className="text-sm">{formatDate(run.started_at)}</span>
+                      <span className="font-mono text-[11px] text-muted-foreground">{run.id?.slice(0, 8)}</span>
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <StatusBadge status={run.status} />
+                  </TableCell>
+                  <TableCell>
+                    <button
+                      type="button"
+                      className="text-sm text-fit-blue-deep hover:underline"
+                      onClick={() => applyFilters({ triggerSource: run.trigger_source ?? "" })}
+                    >
+                      {run.trigger_source || "unknown"}
+                    </button>
+                  </TableCell>
+                  <TableCell className="text-right tabular-nums">{formatDurationSeconds(run.duration_seconds)}</TableCell>
+                  <TableCell className="text-right tabular-nums">{run.workflows_seen ?? 0}</TableCell>
+                  <TableCell className="text-right tabular-nums">{run.workflows_changed ?? 0}</TableCell>
+                  <TableCell className="text-right tabular-nums">{run.workflows_unchanged ?? 0}</TableCell>
+                  <TableCell className="text-right tabular-nums">{run.snapshots_inserted ?? 0}</TableCell>
+                  <TableCell className="text-right tabular-nums">{run.errors_count ?? 0}</TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+            </Table>
+          </div>
+        ) : (
+          <div className="flex flex-col items-center justify-center py-16 text-muted-foreground">
             <RefreshCw className="w-10 h-10 mb-3 opacity-30" />
-            <p className="text-sm">No sync runs found</p>
-          </CardContent>
-        </Card>
+            <p className="text-sm">
+              {hasActiveFilters ? "No sync runs match your filters" : "No sync runs found"}
+            </p>
+          </div>
+        )}
+      </DataTableFrame>
+
+      {runs && runs.some((run) => !!run.errors_json) && (
+        <DataTableFrame title="Run Errors" description="Raw error payloads for debugging">
+          <div className="divide-y divide-fit-blue/10">
+            {runs
+              .filter((run) => !!run.errors_json)
+              .slice(0, 10)
+              .map((run) => (
+                <div key={`error-${run.id}`} className="p-4">
+                  <div className="mb-2 flex items-center gap-2 text-xs text-muted-foreground">
+                    <AlertCircle className="h-3.5 w-3.5 text-destructive" />
+                    <span>{formatDate(run.started_at)}</span>
+                    <span className="font-mono">{run.id}</span>
+                  </div>
+                  <pre className="max-h-48 overflow-auto whitespace-pre-wrap break-words rounded-md border border-fit-blue/15 bg-fit-silver p-3 text-xs font-mono">
+                    {JSON.stringify(run.errors_json, null, 2)}
+                  </pre>
+                </div>
+              ))}
+          </div>
+        </DataTableFrame>
       )}
     </div>
   );
-}
-
-function SyncRunCard({ run }: { run: N8nInventorySyncRun }) {
-  const [errorOpen, setErrorOpen] = useState(false);
-  const hasErrors = run.errors_json && (
-    Array.isArray(run.errors_json) ? run.errors_json.length > 0 : Object.keys(run.errors_json).length > 0
-  );
-
-  return (
-    <Card data-testid={`card-sync-run-${run.id}`}>
-      <CardContent className="p-4">
-        <div className="flex items-start justify-between gap-4 flex-wrap">
-          <div className="flex items-center gap-3 min-w-0">
-            <StatusIcon status={run.status} />
-            <div className="min-w-0">
-              <div className="flex items-center gap-2 flex-wrap">
-                <StatusBadge status={run.status} />
-                <span className="font-mono text-xs text-muted-foreground">{run.id?.slice(0, 8)}</span>
-              </div>
-              <div className="flex items-center gap-1 mt-1 text-xs text-muted-foreground">
-                <Clock className="w-3 h-3" />
-                <span>{formatDate(run.started_at)}</span>
-                {run.finished_at && (
-                  <>
-                    <span className="mx-1">to</span>
-                    <span>{formatDate(run.finished_at)}</span>
-                    <span className="ml-1">({duration(run.started_at, run.finished_at)})</span>
-                  </>
-                )}
-              </div>
-            </div>
-          </div>
-          <div className="flex items-center gap-4 text-sm shrink-0">
-            <Stat label="Seen" value={run.workflows_seen} />
-            <Stat label="Changed" value={run.workflows_changed} />
-            <Stat label="Unchanged" value={run.workflows_unchanged} />
-            <Stat label="Snapshots" value={run.snapshots_inserted} />
-            <Stat label="Duration (s)" value={run.duration_seconds} />
-          </div>
-        </div>
-
-        {hasErrors && (
-          <Collapsible open={errorOpen} onOpenChange={setErrorOpen}>
-            <CollapsibleTrigger asChild>
-              <button
-                className="flex items-center gap-1 mt-3 text-xs text-destructive"
-                data-testid={`button-toggle-errors-${run.id}`}
-              >
-                <AlertCircle className="w-3 h-3" />
-                <span>View Errors</span>
-                {errorOpen ? (
-                  <ChevronDown className="w-3 h-3" />
-                ) : (
-                  <ChevronRight className="w-3 h-3" />
-                )}
-              </button>
-            </CollapsibleTrigger>
-            <CollapsibleContent>
-              <pre className="mt-2 overflow-auto rounded-md bg-muted p-3 text-xs font-mono max-h-48">
-                {JSON.stringify(run.errors_json, null, 2)}
-              </pre>
-            </CollapsibleContent>
-          </Collapsible>
-        )}
-      </CardContent>
-    </Card>
-  );
-}
-
-function StatusIcon({ status }: { status: string }) {
-  const s = status?.toLowerCase();
-  if (s === "success" || s === "completed") {
-    return <div className="w-2 h-2 rounded-full bg-status-online shrink-0 mt-1.5" />;
-  }
-  if (s === "running" || s === "in_progress") {
-    return <div className="w-2 h-2 rounded-full bg-status-away shrink-0 mt-1.5 animate-pulse" />;
-  }
-  if (s === "error" || s === "failed") {
-    return <div className="w-2 h-2 rounded-full bg-status-busy shrink-0 mt-1.5" />;
-  }
-  return <div className="w-2 h-2 rounded-full bg-status-offline shrink-0 mt-1.5" />;
 }
 
 function StatusBadge({ status }: { status: string }) {
@@ -151,22 +273,39 @@ function StatusBadge({ status }: { status: string }) {
   );
 }
 
-function Stat({ label, value }: { label: string; value: number | null | undefined }) {
+function FilterPill({
+  active,
+  label,
+  onClick,
+}: {
+  active: boolean;
+  label: string;
+  onClick: () => void;
+}) {
   return (
-    <div className="text-center">
-      <p className="text-xs text-muted-foreground">{label}</p>
-      <p className="font-semibold tabular-nums">{value ?? "—"}</p>
-    </div>
+    <button
+      type="button"
+      onClick={onClick}
+      className={[
+        "rounded-md border px-2.5 py-1 text-xs transition-colors",
+        active
+          ? "border-fit-blue bg-fit-blue text-white"
+          : "border-fit-blue/25 bg-white text-fit-navy hover:bg-fit-silver",
+      ].join(" ")}
+    >
+      {label}
+    </button>
   );
 }
 
 function formatDate(dateStr: string | null | undefined): string {
-  if (!dateStr) return "—";
+  if (!dateStr) return "-";
   try {
     const d = new Date(dateStr);
     return d.toLocaleDateString("en-US", {
       month: "short",
       day: "numeric",
+      year: "numeric",
       hour: "2-digit",
       minute: "2-digit",
     });
@@ -175,16 +314,10 @@ function formatDate(dateStr: string | null | undefined): string {
   }
 }
 
-function duration(start: string, end: string): string {
-  try {
-    const ms = new Date(end).getTime() - new Date(start).getTime();
-    if (ms < 1000) return `${ms}ms`;
-    const s = Math.floor(ms / 1000);
-    if (s < 60) return `${s}s`;
-    const m = Math.floor(s / 60);
-    const rem = s % 60;
-    return `${m}m ${rem}s`;
-  } catch {
-    return "—";
-  }
+function formatDurationSeconds(value: number | null | undefined): string {
+  if (value == null || Number.isNaN(value)) return "-";
+  if (value < 60) return `${value}s`;
+  const minutes = Math.floor(value / 60);
+  const seconds = value % 60;
+  return `${minutes}m ${seconds}s`;
 }

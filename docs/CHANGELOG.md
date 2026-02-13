@@ -2,6 +2,38 @@
 
 ## 2026-02-13
 
+- Milestone 7.9 logo/header enhancement: added playful FIT flashlight emoji accents in header/sidebar branding, including inward-facing right light via `fit-emoji-flip` utility.
+- Upgraded `CodeBlock` to real syntax-highlighted rendering using PrismJS (Python/TypeScript/JavaScript/JSON/Bash) with FIT-tuned token colors.
+- Added env-specific schema routing for Supabase clients (`SUPABASE_DB_SCHEMA_*`) so `demo` can use a separate schema contract without code changes.
+- Added callout variants for 7.7 notes UX (`note`, `success/tip`, `warning`, `danger`) with support for static and collapsible blocks.
+- Extended runtime environment selector and server env parsing to support `demo` mode (`dev|demo|prod`) with server-side Supabase demo overrides.
+- Enhanced 7.7 notes UX with `Callout` primitives: added static and collapsible FIT-styled callouts and replaced plain list content on `/snippets` Notes tab.
+- Milestone 7.7 content primitives: added reusable `CodeBlock`, `MermaidBlock`, and `ContentTabs` components plus starter `/snippets` page with sample code/diagram/notes content.
+- Added Mermaid runtime dependency and shared snippet contract (`ContentSnippet`) for upcoming generated-content flow.
+- Added `Snippets` navigation item under `Insights`.
+- Dark-theme tuning pass: aligned page background to FIT blue-deep and adjusted dark surfaces/cards toward ~85% blue-deep tint for closer FIT intranet look/feel.
+- Added `docs/theme-tuning.md` with practical variable-level instructions for manual theme iteration.
+- Extended tokenization in Milestone 7.8 with component card tokens (`components.cards` in `design.json`) and mapped CSS variables/classes in `client/src/index.css` (`.fit-card`, `.fit-card-feature`, `.fit-card-surface`, `.fit-card-cta`).
+- Milestone 7.8 light/dark theme system: added persisted theme mode (`light|dark`) with `documentElement.dark` class toggling and a header theme toggle control.
+- Added `client/src/lib/theme-mode.ts` for theme initialization/persistence and `client/src/components/layout/theme-selector.tsx` for UI control.
+- Updated shell/header token styles for dark readability (`fit-app-header`, `fit-page-header`, and header brand text/buttons).
+- Added local Playwright MCP setup using the official `@playwright/mcp` package in `.cursor/mcp.json` (repo-local, not tracked by git due `.cursor/` policy).
+- Added npm helper script `mcp:playwright` for manual headless MCP server startup and documented local MCP usage in `README.md` and `docs/README.md`.
+- Milestone 7.6 UI polish/hardening: improved sync/runs and reliability table ergonomics with horizontal overflow handling, clearer card titles, and wrapped error payload rendering for long messages.
+- Docs polish: aligned `docs/ui-style-guide.md` shell guidance with current full-width layout and added README troubleshooting note that backend route changes require a dev-server restart.
+- Milestone 7.5 sync-runs/reliability v2: added `/api/sync-runs` drilldown filters (`day`, `triggerSource`, `status`) and wired reliability daily rows to deep-link into filtered sync run history.
+- Redesigned `/sync-runs` into a URL-driven table view with status/trigger/day filters and inline raw error payload inspection.
+- Updated `/reliability` with summary cards and clickable drilldowns (runs/success/error) into `/sync-runs` scoped by day + trigger.
+- Milestone 7.4 workflow detail v2: added selectable snapshot list, richer snapshot metadata panel, and ergonomic JSON viewer controls (copy + wrap toggle).
+- Added `docs/v2-roadmap.md` to define post-7.6 wishlist and Milestone 7.7 content primitives (`CodeBlock`, `MermaidBlock`, and auto-generation from workflow nodes/connections/snapshots).
+- Milestone 7.3 workflows v2: implemented URL-driven filter controls (`q`, `tag`, `active`, `includeSoftDeleted`) with clickable tag chips and sharable filter URLs.
+- Milestone 7.2 navigation redesign: replaced single flat nav list with grouped, scalable sections (`Core`, `Insights`, `System`) backed by centralized route config (`client/src/config/navigation.ts`).
+- Milestone 7.1 environment plumbing: added Dev/Prod header selector with localStorage persistence and API-wide `env=dev|prod` propagation.
+- Added server-side environment-aware Supabase client resolution (`dev`/`prod`) with secure service-role keys only on the server.
+- Added optional `.env` overrides for env selector routing (`SUPABASE_URL_DEV/PROD` + `SUPABASE_SERVICE_ROLE_KEY_DEV/PROD`) with fallback to base dev config.
+- Milestone 7.0 foundation freeze: added FIT app shell baseline, shared `PageHeader`, and shared `DataTableFrame` table standard.
+- Added `design.json` as design-token source and mapped FIT font/color direction into runtime styles (`client/src/index.css` + `tailwind.config.ts`).
+- Added `docs/ui-style-guide.md` to document frozen shell/header/table standards for redesign milestones.
 - Changed API request logging to minimal output by default (method/path/status/duration + outcome) and added opt-in verbose mode via `API_LOG_MODE=verbose` with truncated payload logging.
 - Migrated `/api/workflows` from base table reads to `n8n_inventory.workflows_with_latest_snapshot` with optional filters: `q`, `tag`, `active`, `includeSoftDeleted`, `limit`.
 - Migrated `/api/sync-runs` default source to `n8n_inventory.inventory_sync_runs_enriched` and added `?daily=true` support via `n8n_inventory.inventory_sync_runs_daily`.
