@@ -1,4 +1,4 @@
-import type { Express } from "express";
+import type { Express, Request } from "express";
 import { supabase, isConfigured, getEnvStatus } from "../supabase";
 
 const REQUIRED_TABLES = [
@@ -8,6 +8,32 @@ const REQUIRED_TABLES = [
   "workflow_connections",
   "inventory_sync_runs",
 ];
+
+const REQUIRED_VIEWS = [
+  "workflows_with_latest_snapshot",
+  "inventory_sync_runs_enriched",
+  "inventory_sync_runs_daily",
+];
+
+function singleQueryParam(value: Request["query"][string]): string | undefined {
+  if (typeof value === "string") return value;
+  if (Array.isArray(value) && typeof value[0] === "string") return value[0];
+  return undefined;
+}
+
+function parseBoolean(value: string | undefined): boolean | undefined {
+  if (!value) return undefined;
+  const normalized = value.toLowerCase();
+  if (normalized === "true" || normalized === "1") return true;
+  if (normalized === "false" || normalized === "0") return false;
+  return undefined;
+}
+
+function parseLimit(value: string | undefined, fallback: number, max = 500): number {
+  const parsed = Number.parseInt(value ?? "", 10);
+  if (Number.isNaN(parsed) || parsed <= 0) return fallback;
+  return Math.min(parsed, max);
+}
 
 export function registerInventoryRoutes(app: Express): void {
   app.get("/api/health", async (_req, res) => {
@@ -21,18 +47,23 @@ export function registerInventoryRoutes(app: Express): void {
           count: null,
           error: "Supabase not configured",
         })),
+        views: REQUIRED_VIEWS.map((name) => ({
+          name,
+          status: "error",
+          count: null,
+          error: "Supabase not configured",
+        })),
         envStatus,
       });
     }
     const client = supabase;
 
-    const results = await Promise.all(
+    const tables = await Promise.all(
       REQUIRED_TABLES.map(async (name) => {
         try {
           const { count, error } = await client
             .from(name)
-            .select("*", { count: "exact" })
-            .limit(1);
+            .select("*", { count: "exact", head: true });
 
           if (error) {
             return { name, status: "error" as const, count: null, error: error.message };
@@ -44,7 +75,24 @@ export function registerInventoryRoutes(app: Express): void {
       }),
     );
 
-    res.json({ tables: results, envStatus });
+    const views = await Promise.all(
+      REQUIRED_VIEWS.map(async (name) => {
+        try {
+          const { count, error } = await client
+            .from(name)
+            .select("*", { count: "exact", head: true });
+
+          if (error) {
+            return { name, status: "error" as const, count: null, error: error.message };
+          }
+          return { name, status: "ok" as const, count: count ?? 0 };
+        } catch (err: any) {
+          return { name, status: "error" as const, count: null, error: err.message };
+        }
+      }),
+    );
+
+    res.json({ tables, views, envStatus });
   });
 
   app.get("/api/migrate/sql", (_req, res) => {
@@ -115,16 +163,39 @@ NOTIFY pgrst, 'reload schema';
     res.json({ sql });
   });
 
-  app.get("/api/workflows", async (_req, res) => {
+  app.get("/api/workflows", async (req, res) => {
     if (!supabase) {
       return res.status(503).json({ message: "Supabase not configured" });
     }
 
     try {
-      const { data, error } = await supabase
-        .from("workflows")
+      const q = singleQueryParam(req.query.q)?.trim();
+      const tag = singleQueryParam(req.query.tag)?.trim();
+      const active = parseBoolean(singleQueryParam(req.query.active));
+      const includeSoftDeleted = parseBoolean(singleQueryParam(req.query.includeSoftDeleted)) ?? false;
+      const limit = parseLimit(singleQueryParam(req.query.limit), 100, 500);
+
+      let query = supabase
+        .from("workflows_with_latest_snapshot")
         .select("*")
-        .order("updated_at", { ascending: false });
+        .order("latest_snapshot_captured_at", { ascending: false, nullsFirst: false })
+        .order("updated_at", { ascending: false })
+        .limit(limit);
+
+      if (q) {
+        query = query.ilike("name", `%${q}%`);
+      }
+      if (tag) {
+        query = query.contains("tags", [tag]);
+      }
+      if (typeof active === "boolean") {
+        query = query.eq("active", active);
+      }
+      if (!includeSoftDeleted) {
+        query = query.is("soft_deleted_at", null);
+      }
+
+      const { data, error } = await query;
 
       if (error) return res.status(500).json({ message: error.message });
       res.json(data ?? []);
@@ -142,7 +213,7 @@ NOTIFY pgrst, 'reload schema';
 
     try {
       const { data: workflow, error: wfError } = await supabase
-        .from("workflows")
+        .from("workflows_with_latest_snapshot")
         .select("*")
         .eq("workflow_id", workflowId)
         .single();
@@ -151,7 +222,19 @@ NOTIFY pgrst, 'reload schema';
 
       const { data: snapshots, error: snapError } = await supabase
         .from("workflow_snapshots")
-        .select("*")
+        .select(`
+          id:snapshot_id,
+          workflow_id,
+          captured_at,
+          workflow_jsonb:workflow_json,
+          definition_hash,
+          version_id,
+          version_counter,
+          has_webhook_trigger,
+          webhook_path,
+          sync_run_id,
+          execution_stats
+        `)
         .eq("workflow_id", workflowId)
         .order("captured_at", { ascending: false })
         .limit(10);
@@ -166,17 +249,32 @@ NOTIFY pgrst, 'reload schema';
     }
   });
 
-  app.get("/api/sync-runs", async (_req, res) => {
+  app.get("/api/sync-runs", async (req, res) => {
     if (!supabase) {
       return res.status(503).json({ message: "Supabase not configured" });
     }
 
     try {
+      const daily = parseBoolean(singleQueryParam(req.query.daily)) ?? false;
+      const limit = parseLimit(singleQueryParam(req.query.limit), daily ? 60 : 25, daily ? 365 : 200);
+
+      if (daily) {
+        const { data, error } = await supabase
+          .from("inventory_sync_runs_daily")
+          .select("*")
+          .order("day", { ascending: false })
+          .order("trigger_source", { ascending: true })
+          .limit(limit);
+
+        if (error) return res.status(500).json({ message: error.message });
+        return res.json(data ?? []);
+      }
+
       const { data, error } = await supabase
-        .from("inventory_sync_runs")
+        .from("inventory_sync_runs_enriched")
         .select("*")
         .order("started_at", { ascending: false })
-        .limit(25);
+        .limit(limit);
 
       if (error) return res.status(500).json({ message: error.message });
       res.json(data ?? []);

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import { Search, GitBranch, Archive, Loader2 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -17,15 +17,30 @@ import {
 import type { N8nWorkflow } from "@shared/schema";
 
 export default function WorkflowsPage() {
-  const [search, setSearch] = useState("");
+  const [location] = useLocation();
+  const queryString = location.includes("?")
+    ? location.split("?")[1]
+    : window.location.search.replace(/^\?/, "");
+  const params = new URLSearchParams(queryString);
+  const initialSearch = params.get("q") ?? "";
+  const tagFilter = params.get("tag") ?? "";
+  const activeFilter = params.get("active");
+  const includeSoftDeleted = params.get("includeSoftDeleted") === "true";
+  const [search, setSearch] = useState(initialSearch);
+  const searchValue = search;
+  const workflowQueryPath = (() => {
+    const query = new URLSearchParams();
+    if (tagFilter) query.set("tag", tagFilter);
+    if (activeFilter) query.set("active", activeFilter);
+    if (includeSoftDeleted) query.set("includeSoftDeleted", "true");
+    if (searchValue.trim()) query.set("q", searchValue.trim());
+    const value = query.toString();
+    return value ? `/api/workflows?${value}` : "/api/workflows";
+  })();
 
   const { data: workflows, isLoading, error } = useQuery<N8nWorkflow[]>({
-    queryKey: ["/api/workflows"],
+    queryKey: [workflowQueryPath],
   });
-
-  const filtered = workflows?.filter((wf) =>
-    wf.name.toLowerCase().includes(search.toLowerCase())
-  );
 
   return (
     <div className="p-6 max-w-6xl mx-auto space-y-6">
@@ -41,13 +56,21 @@ export default function WorkflowsPage() {
           <Input
             type="search"
             placeholder="Filter by name..."
-            value={search}
+            value={searchValue}
             onChange={(e) => setSearch(e.target.value)}
             className="pl-9"
             data-testid="input-search-workflows"
           />
         </div>
       </div>
+      {(tagFilter || activeFilter) && (
+        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+          <span>Filters:</span>
+          {tagFilter && <Badge variant="outline">tag={tagFilter}</Badge>}
+          {activeFilter && <Badge variant="outline">active={activeFilter}</Badge>}
+          <Link href="/workflows" className="underline">clear</Link>
+        </div>
+      )}
 
       <Card>
         <CardContent className="p-0">
@@ -66,7 +89,7 @@ export default function WorkflowsPage() {
             <div className="p-6 text-sm text-destructive">
               Failed to load workflows: {(error as Error).message}
             </div>
-          ) : filtered && filtered.length > 0 ? (
+          ) : workflows && workflows.length > 0 ? (
             <Table>
               <TableHeader>
                 <TableRow>
@@ -79,7 +102,7 @@ export default function WorkflowsPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filtered.map((wf) => (
+                {workflows.map((wf) => (
                   <TableRow
                     key={wf.workflow_id}
                     className="cursor-pointer"
@@ -130,7 +153,7 @@ export default function WorkflowsPage() {
             <div className="flex flex-col items-center justify-center py-16 text-muted-foreground">
               <GitBranch className="w-10 h-10 mb-3 opacity-30" />
               <p className="text-sm">
-                {search ? "No workflows match your search" : "No workflows found"}
+                {searchValue ? "No workflows match your search" : "No workflows found"}
               </p>
             </div>
           )}
