@@ -27,6 +27,7 @@ Internal documentation for `n8n Insights (by FIT Automate)`.
 - `/workflows/:workflowId` - workflow detail + recent snapshots
 - `/sync-runs` - recent inventory sync run history
 - `/reliability` - daily sync reliability rollup from view data
+- `/snippets` - code + Mermaid + notes content primitives starter
 
 ## Docs Index
 

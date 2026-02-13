@@ -12,6 +12,7 @@ import WorkflowsPage from "@/pages/workflows";
 import WorkflowDetailPage from "@/pages/workflow-detail";
 import SyncRunsPage from "@/pages/sync-runs";
 import ReliabilityPage from "@/pages/reliability";
+import SnippetsPage from "@/pages/snippets";
 
 function Router() {
   return (
@@ -26,6 +27,7 @@ function Router() {
       </Route>
       <Route path="/sync-runs" component={SyncRunsPage} />
       <Route path="/reliability" component={ReliabilityPage} />
+      <Route path="/snippets" component={SnippetsPage} />
       <Route component={NotFound} />
     </Switch>
   );

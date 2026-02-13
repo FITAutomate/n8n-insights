@@ -2,6 +2,9 @@
 
 ## 2026-02-13
 
+- Milestone 7.7 content primitives: added reusable `CodeBlock`, `MermaidBlock`, and `ContentTabs` components plus starter `/snippets` page with sample code/diagram/notes content.
+- Added Mermaid runtime dependency and shared snippet contract (`ContentSnippet`) for upcoming generated-content flow.
+- Added `Snippets` navigation item under `Insights`.
 - Dark-theme tuning pass: aligned page background to FIT blue-deep and adjusted dark surfaces/cards toward ~85% blue-deep tint for closer FIT intranet look/feel.
 - Added `docs/theme-tuning.md` with practical variable-level instructions for manual theme iteration.
 - Extended tokenization in Milestone 7.8 with component card tokens (`components.cards` in `design.json`) and mapped CSS variables/classes in `client/src/index.css` (`.fit-card`, `.fit-card-feature`, `.fit-card-surface`, `.fit-card-cta`).

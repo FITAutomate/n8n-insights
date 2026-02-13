@@ -61,6 +61,7 @@ Optional:
 - `/workflows/:workflowId`
 - `/sync-runs`
 - `/reliability`
+- `/snippets`
 
 ## Docs
 

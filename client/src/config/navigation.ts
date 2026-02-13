@@ -1,5 +1,5 @@
 import type { LucideIcon } from "lucide-react";
-import { Activity, GitBranch, LineChart, RefreshCw } from "lucide-react";
+import { Activity, FileCode2, GitBranch, LineChart, RefreshCw } from "lucide-react";
 
 export interface NavigationItem {
   title: string;
@@ -39,6 +39,12 @@ export const NAVIGATION_SECTIONS: NavigationSection[] = [
         url: "/reliability",
         icon: LineChart,
         description: "Daily rollups",
+      },
+      {
+        title: "Snippets",
+        url: "/snippets",
+        icon: FileCode2,
+        description: "Code and diagrams",
       },
     ],
   },

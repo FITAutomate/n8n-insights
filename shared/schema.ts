@@ -107,3 +107,16 @@ export interface N8nInventorySyncRunDaily {
   snapshots_inserted: number;
   errors_count: number;
 }
+
+export type SnippetType = "code" | "diagram" | "notes";
+
+export interface ContentSnippet {
+  id: string;
+  title: string;
+  type: SnippetType;
+  language?: string;
+  source?: string;
+  body: string;
+  tags?: string[];
+  updatedAt?: string;
+}

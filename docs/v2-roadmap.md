@@ -10,20 +10,20 @@ Purpose: track near-term UX and content capabilities after milestone-driven v2 r
 - 7.3 workflows v2 URL-driven filters + tag chips
 - 7.4 workflow detail v2
 - 7.5 sync runs + reliability drilldowns
-- 7.6 UI polish + hardening (planned)
-- 7.7 content primitives for code/diagram pages (planned)
+- 7.6 UI polish + hardening
+- 7.7 content primitives for code/diagram pages
 - 7.8 light/dark theme system
 
 Recommended execution order for remaining milestones: 7.6 -> 7.8 -> 7.7.
 
-## 7.7 Content Primitives (planned)
+## 7.7 Content Primitives
 
 Goal: support rendering reusable technical content blocks in the dashboard UX.
 
 ### Scope
 
 - `CodeBlock` component:
-  - syntax-highlighted code
+  - formatted code surface
   - copy-to-clipboard
   - language label (`python`, `typescript`, etc.)
 - `MermaidBlock` component:
@@ -33,6 +33,11 @@ Goal: support rendering reusable technical content blocks in the dashboard UX.
   - tabs for `Code`, `Diagram`, `Notes`
 - `Snippet` data contract:
   - id, title, type, language, source, body, tags, updatedAt
+
+Delivered starter:
+- route: `/snippets`
+- navigation entry under `Insights`
+- sample Python/TypeScript snippets + Mermaid flow chart + notes panel
 
 ### Data automation ambition
 
