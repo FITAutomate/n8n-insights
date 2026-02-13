@@ -22,17 +22,8 @@ export function AppSidebar() {
     <Sidebar>
       <SidebarHeader className="p-4">
         <Link href="/health" data-testid="link-sidebar-home">
-          <div className="fit-sidebar-brand cursor-pointer">
-            <img src={logoPath} alt="Forward IT Thinking" className="h-8 w-auto self-start" />
-            <div className="flex flex-col">
-              <span className="font-heading text-sm font-semibold text-sidebar-foreground">
-                <span aria-hidden="true">🔦 </span>
-                <span>n8n Insights</span>
-              </span>
-              <span className="text-[11px] tracking-[0.10em] uppercase text-sidebar-foreground/70">
-                FIT Automate
-              </span>
-            </div>
+          <div className="fit-sidebar-brand flex items-center justify-center cursor-pointer">
+            <img src={logoPath} alt="Forward IT Thinking" className="h-10 w-auto" />
           </div>
         </Link>
       </SidebarHeader>
@@ -68,6 +59,13 @@ export function AppSidebar() {
       </SidebarContent>
       <SidebarSeparator />
       <SidebarFooter className="px-3 py-2">
+        <div className="mb-3 rounded-md border border-sidebar-border bg-sidebar-accent/20 p-2">
+          <img
+            src="/welcome-robot.png"
+            alt="Welcome robot"
+            className="mx-auto h-44 w-auto object-contain"
+          />
+        </div>
         <div className="rounded-md border border-sidebar-border bg-sidebar-accent/40 px-2.5 py-2">
           <p className="text-[11px] font-semibold tracking-[0.08em] uppercase text-sidebar-foreground/80">
             Navigation v2
