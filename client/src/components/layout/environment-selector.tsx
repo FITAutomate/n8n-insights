@@ -23,7 +23,7 @@ export function EnvironmentSelector() {
   };
 
   return (
-    <div className="flex items-center rounded-md border border-fit-blue/25 bg-white p-1 shadow-sm">
+    <div className="flex items-center rounded-md border border-fit-blue/25 bg-white p-1 shadow-sm dark:border-fit-blue/35 dark:bg-fit-navy">
       {options.map((option) => (
         <Button
           key={option.value}

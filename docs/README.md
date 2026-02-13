@@ -34,5 +34,6 @@ Internal documentation for `n8n Insights (by FIT Automate)`.
 - `docs/refactor-notes.md` - file moves, shims, and architecture refactors
 - `docs/diagrams/README.md` - Mermaid diagram conventions and placement
 - `docs/ui-style-guide.md` - frozen UI foundations and token usage
+- `docs/theme-tuning.md` - quick knobs for light/dark visual tuning
 - `docs/v2-roadmap.md` - redesign backlog and 7.7 content primitives/wish list
 - `n8n-insights.md` - milestone tracker and phased delivery status

@@ -6,6 +6,9 @@ Purpose: define a stable baseline for layout and visual consistency before incre
 
 - `design.json` is the design-token source.
 - Runtime implementation maps tokens into CSS variables in `client/src/index.css`.
+- Component token aliases now include card primitives:
+  - base: `.fit-card`
+  - variants: `.fit-card-feature`, `.fit-card-surface`, `.fit-card-cta`
 
 ## Foundations frozen in 7.0
 
@@ -34,6 +37,18 @@ Purpose: define a stable baseline for layout and visual consistency before incre
 - Accent: FIT green (`#1CD000`)
 - Anchor/dark text: FIT navy (`#00003D`)
 - Subtle backgrounds: FIT silver (`#F3F4F7`)
+
+## Theme system (Milestone 7.8)
+
+- Light/dark mode is user-toggleable from header.
+- Mode persists in localStorage (`fit-insights-theme-mode`).
+- Runtime applies `documentElement.dark` and uses token variables from `client/src/index.css`.
+
+## Card tokens (Milestone 7.8 extension)
+
+- Token keys live in `design.json` under `components.cards`.
+- CSS variable mappings live in `client/src/index.css` (`--fit-card-*`).
+- To restyle cards globally, edit `design.json` intent + mapped CSS variables once instead of changing page-level classes repeatedly.
 
 ## Milestone boundary
 

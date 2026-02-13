@@ -217,7 +217,7 @@ Evidence captured (2026-02-13)
 - [x] 7.5 Sync runs v2 + reliability drilldowns.
 - [x] 7.6 UI polish + hardening.
 - [ ] 7.7 Content primitives (`CodeBlock`, `MermaidBlock`, generated snippets from workflow graph data).
-- [ ] 7.8 Light/dark theme system (FIT token-aware toggle and persistence).
+- [x] 7.8 Light/dark theme system (FIT token-aware toggle and persistence).
 
 Acceptance criteria
 - Working demo: each sub-milestone ships with build/type/lint pass.
@@ -236,6 +236,7 @@ Evidence captured (2026-02-13)
 - 7.4 completed with snapshot selection UX and JSON viewer controls.
 - 7.5 completed with URL-driven sync run filters and reliability drilldowns to filtered run history.
 - 7.6 completed with table/readability polish, wrapped error payload UX, and docs/runtime hardening notes.
+- 7.8 completed with persisted light/dark mode toggle in shell header and token-aware dark style adjustments.
 
 Notes
 - Keep runtime configuration Supabase-focused for this repo.

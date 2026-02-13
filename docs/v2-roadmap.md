@@ -12,7 +12,7 @@ Purpose: track near-term UX and content capabilities after milestone-driven v2 r
 - 7.5 sync runs + reliability drilldowns
 - 7.6 UI polish + hardening (planned)
 - 7.7 content primitives for code/diagram pages (planned)
-- 7.8 light/dark theme system (planned)
+- 7.8 light/dark theme system
 
 Recommended execution order for remaining milestones: 7.6 -> 7.8 -> 7.7.
 

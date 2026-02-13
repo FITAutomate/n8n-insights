@@ -2,6 +2,12 @@
 
 ## 2026-02-13
 
+- Dark-theme tuning pass: aligned page background to FIT blue-deep and adjusted dark surfaces/cards toward ~85% blue-deep tint for closer FIT intranet look/feel.
+- Added `docs/theme-tuning.md` with practical variable-level instructions for manual theme iteration.
+- Extended tokenization in Milestone 7.8 with component card tokens (`components.cards` in `design.json`) and mapped CSS variables/classes in `client/src/index.css` (`.fit-card`, `.fit-card-feature`, `.fit-card-surface`, `.fit-card-cta`).
+- Milestone 7.8 light/dark theme system: added persisted theme mode (`light|dark`) with `documentElement.dark` class toggling and a header theme toggle control.
+- Added `client/src/lib/theme-mode.ts` for theme initialization/persistence and `client/src/components/layout/theme-selector.tsx` for UI control.
+- Updated shell/header token styles for dark readability (`fit-app-header`, `fit-page-header`, and header brand text/buttons).
 - Added local Playwright MCP setup using the official `@playwright/mcp` package in `.cursor/mcp.json` (repo-local, not tracked by git due `.cursor/` policy).
 - Added npm helper script `mcp:playwright` for manual headless MCP server startup and documented local MCP usage in `README.md` and `docs/README.md`.
 - Milestone 7.6 UI polish/hardening: improved sync/runs and reliability table ergonomics with horizontal overflow handling, clearer card titles, and wrapped error payload rendering for long messages.

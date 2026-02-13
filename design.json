@@ -68,5 +68,38 @@
     "md": "16px",
     "lg": "24px",
     "xl": "32px"
+  },
+  "components": {
+    "cards": {
+      "shape": "rounded-xl",
+      "padding": "p-8",
+      "shadow": "shadow-lg",
+      "transition": "transition-all duration-200 ease-out",
+      "hover": {
+        "lift": "-translate-y-0.5",
+        "shadow": "shadow-xl",
+        "borderAccent": "border-fit-green/40"
+      },
+      "variants": {
+        "feature": {
+          "style": "solid",
+          "bg": "fit-blue-deep",
+          "text": "white",
+          "border": "border border-white/10"
+        },
+        "surface": {
+          "style": "solid",
+          "bg": "white",
+          "text": "fit-navy",
+          "border": "border border-fit-blue/15"
+        },
+        "ctaGradient": {
+          "style": "gradient",
+          "bg": "gradient:ctaCard",
+          "text": "white",
+          "border": "border border-white/10"
+        }
+      }
+    }
   }
 }
