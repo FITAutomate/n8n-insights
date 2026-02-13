@@ -1,11 +1,13 @@
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Link, useLocation } from "wouter";
-import { Search, GitBranch, Archive, Loader2 } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
+import { useLocation, useSearch } from "wouter";
+import { Archive, GitBranch, Search, SlidersHorizontal } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
+import { PageHeader } from "@/components/layout/page-header";
+import { DataTableFrame } from "@/components/layout/data-table-frame";
 import {
   Table,
   TableBody,
@@ -16,155 +18,262 @@ import {
 } from "@/components/ui/table";
 import type { N8nWorkflow } from "@shared/schema";
 
+type ActiveFilter = "all" | "true" | "false";
+
+interface WorkflowFilters {
+  q: string;
+  tag: string;
+  active: ActiveFilter;
+  includeSoftDeleted: boolean;
+}
+
+function parseFilters(search: string): WorkflowFilters {
+  const params = new URLSearchParams(search.replace(/^\?/, ""));
+
+  return {
+    q: params.get("q") ?? "",
+    tag: params.get("tag") ?? "",
+    active: params.get("active") === "true" || params.get("active") === "false"
+      ? (params.get("active") as ActiveFilter)
+      : "all",
+    includeSoftDeleted: params.get("includeSoftDeleted") === "true",
+  };
+}
+
+function buildQuery(filters: WorkflowFilters): string {
+  const query = new URLSearchParams();
+  if (filters.q.trim()) query.set("q", filters.q.trim());
+  if (filters.tag) query.set("tag", filters.tag);
+  if (filters.active !== "all") query.set("active", filters.active);
+  if (filters.includeSoftDeleted) query.set("includeSoftDeleted", "true");
+  return query.toString();
+}
+
+function buildWorkflowsApiPath(filters: WorkflowFilters): string {
+  const value = buildQuery(filters);
+  return value ? `/api/workflows?${value}` : "/api/workflows";
+}
+
+function buildWorkflowsUrl(filters: WorkflowFilters): string {
+  const value = buildQuery(filters);
+  return value ? `/workflows?${value}` : "/workflows";
+}
+
 export default function WorkflowsPage() {
-  const [location] = useLocation();
-  const queryString = location.includes("?")
-    ? location.split("?")[1]
-    : window.location.search.replace(/^\?/, "");
-  const params = new URLSearchParams(queryString);
-  const initialSearch = params.get("q") ?? "";
-  const tagFilter = params.get("tag") ?? "";
-  const activeFilter = params.get("active");
-  const includeSoftDeleted = params.get("includeSoftDeleted") === "true";
-  const [search, setSearch] = useState(initialSearch);
-  const searchValue = search;
-  const workflowQueryPath = (() => {
-    const query = new URLSearchParams();
-    if (tagFilter) query.set("tag", tagFilter);
-    if (activeFilter) query.set("active", activeFilter);
-    if (includeSoftDeleted) query.set("includeSoftDeleted", "true");
-    if (searchValue.trim()) query.set("q", searchValue.trim());
-    const value = query.toString();
-    return value ? `/api/workflows?${value}` : "/api/workflows";
-  })();
+  const [, navigate] = useLocation();
+  const search = useSearch();
+  const filters = useMemo(() => parseFilters(search), [search]);
+  const [searchDraft, setSearchDraft] = useState(filters.q);
+
+  useEffect(() => {
+    setSearchDraft(filters.q);
+  }, [filters.q]);
+
+  const workflowQueryPath = buildWorkflowsApiPath(filters);
 
   const { data: workflows, isLoading, error } = useQuery<N8nWorkflow[]>({
     queryKey: [workflowQueryPath],
   });
 
+  const availableTags = useMemo(() => {
+    const tags = new Set<string>();
+    (workflows ?? []).forEach((workflow) => {
+      (workflow.tags ?? []).forEach((tag) => tags.add(tag));
+    });
+    return Array.from(tags).sort((a, b) => a.localeCompare(b));
+  }, [workflows]);
+
+  const applyFilters = (next: Partial<WorkflowFilters>) => {
+    const merged: WorkflowFilters = { ...filters, ...next };
+    navigate(buildWorkflowsUrl(merged), { replace: false });
+  };
+
+  const resetFilters = () => {
+    setSearchDraft("");
+    navigate("/workflows", { replace: false });
+  };
+
+  const hasActiveFilters = filters.q || filters.tag || filters.active !== "all" || filters.includeSoftDeleted;
+
   return (
-    <div className="p-6 max-w-6xl mx-auto space-y-6">
-      <div className="flex items-start justify-between gap-4 flex-wrap">
-        <div>
-          <h1 className="text-2xl font-semibold" data-testid="text-workflows-title">Workflows</h1>
-          <p className="text-muted-foreground mt-1">
-            {workflows ? `${workflows.length} workflows registered` : "Loading..."}
-          </p>
+    <div className="fit-page space-y-6">
+      <PageHeader
+        title="Workflows"
+        description={workflows ? `${workflows.length} workflows shown` : "Loading workflows"}
+      />
+
+      <div className="rounded-md border border-fit-blue/20 bg-white/85 p-4 shadow-sm">
+        <div className="flex items-center gap-2 text-xs font-semibold tracking-[0.08em] uppercase text-fit-blue-deep">
+          <SlidersHorizontal className="h-3.5 w-3.5" />
+          Filters
         </div>
-        <div className="relative w-full max-w-xs">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-          <Input
-            type="search"
-            placeholder="Filter by name..."
-            value={searchValue}
-            onChange={(e) => setSearch(e.target.value)}
-            className="pl-9"
-            data-testid="input-search-workflows"
+        <div className="mt-3 grid gap-3 md:grid-cols-[1fr_auto]">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              type="search"
+              placeholder="Search workflow name..."
+              value={searchDraft}
+              onChange={(e) => setSearchDraft(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") applyFilters({ q: searchDraft });
+              }}
+              className="pl-9"
+              data-testid="input-search-workflows"
+            />
+          </div>
+          <div className="flex items-center gap-2">
+            <Button size="sm" onClick={() => applyFilters({ q: searchDraft })}>
+              Apply
+            </Button>
+            <Button size="sm" variant="outline" onClick={resetFilters}>
+              Clear
+            </Button>
+          </div>
+        </div>
+
+        <div className="mt-3 flex flex-wrap items-center gap-2">
+          <span className="text-xs font-semibold tracking-[0.08em] uppercase text-muted-foreground">Status</span>
+          <FilterPill active={filters.active === "all"} label="All" onClick={() => applyFilters({ active: "all" })} />
+          <FilterPill active={filters.active === "true"} label="Active" onClick={() => applyFilters({ active: "true" })} />
+          <FilterPill active={filters.active === "false"} label="Inactive" onClick={() => applyFilters({ active: "false" })} />
+          <FilterPill
+            active={filters.includeSoftDeleted}
+            label="Include Soft Deleted"
+            onClick={() => applyFilters({ includeSoftDeleted: !filters.includeSoftDeleted })}
           />
         </div>
-      </div>
-      {(tagFilter || activeFilter) && (
-        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-          <span>Filters:</span>
-          {tagFilter && <Badge variant="outline">tag={tagFilter}</Badge>}
-          {activeFilter && <Badge variant="outline">active={activeFilter}</Badge>}
-          <Link href="/workflows" className="underline">clear</Link>
-        </div>
-      )}
 
-      <Card>
-        <CardContent className="p-0">
-          {isLoading ? (
-            <div className="p-6 space-y-4">
-              {[1, 2, 3, 4, 5].map((i) => (
-                <div key={i} className="flex items-center gap-4">
-                  <Skeleton className="h-5 w-24" />
-                  <Skeleton className="h-5 flex-1" />
-                  <Skeleton className="h-5 w-16" />
-                  <Skeleton className="h-5 w-20" />
-                </div>
-              ))}
-            </div>
-          ) : error ? (
-            <div className="p-6 text-sm text-destructive">
-              Failed to load workflows: {(error as Error).message}
-            </div>
-          ) : workflows && workflows.length > 0 ? (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Workflow ID</TableHead>
-                  <TableHead>Name</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead className="text-right">Nodes</TableHead>
-                  <TableHead>Updated</TableHead>
-                  <TableHead>Last Seen</TableHead>
+        <div className="mt-3 flex flex-wrap items-center gap-2">
+          <span className="text-xs font-semibold tracking-[0.08em] uppercase text-muted-foreground">Tags</span>
+          <FilterPill active={filters.tag === ""} label="All tags" onClick={() => applyFilters({ tag: "" })} />
+          {availableTags.map((tag) => (
+            <FilterPill key={tag} active={filters.tag === tag} label={tag} onClick={() => applyFilters({ tag })} />
+          ))}
+        </div>
+      </div>
+
+      <DataTableFrame title="Workflow Inventory" description="View-backed workflow catalog with latest snapshot context">
+        {isLoading ? (
+          <div className="p-6 space-y-4">
+            {[1, 2, 3, 4, 5].map((i) => (
+              <div key={i} className="flex items-center gap-4">
+                <Skeleton className="h-5 w-48" />
+                <Skeleton className="h-5 w-24" />
+                <Skeleton className="h-5 w-32" />
+                <Skeleton className="h-5 w-40" />
+              </div>
+            ))}
+          </div>
+        ) : error ? (
+          <div className="p-6 text-sm text-destructive">
+            Failed to load workflows: {(error as Error).message}
+          </div>
+        ) : workflows && workflows.length > 0 ? (
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="w-[42%]">Workflow</TableHead>
+                <TableHead className="w-[12%]">Status</TableHead>
+                <TableHead className="w-[14%] text-right">Nodes</TableHead>
+                <TableHead className="w-[18%]">Updated</TableHead>
+                <TableHead className="w-[24%]">Tags</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {workflows.map((wf) => (
+                <TableRow
+                  key={wf.workflow_id}
+                  className="cursor-pointer"
+                  onClick={() => navigate(`/workflows/${wf.workflow_id}`)}
+                  data-testid={`row-workflow-${wf.workflow_id}`}
+                >
+                  <TableCell className="py-3">
+                    <div className="flex items-center gap-2">
+                      <GitBranch className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                      <span className="font-medium" data-testid={`text-workflow-name-${wf.workflow_id}`}>
+                        {wf.name}
+                      </span>
+                      {wf.is_archived && <Archive className="h-3.5 w-3.5 text-muted-foreground" />}
+                    </div>
+                  </TableCell>
+                  <TableCell className="py-3">
+                    <Badge
+                      variant={wf.active === true ? "default" : wf.active === false ? "secondary" : "outline"}
+                      data-testid={`badge-status-${wf.workflow_id}`}
+                    >
+                      {wf.active === true ? "Active" : wf.active === false ? "Inactive" : "Unknown"}
+                    </Badge>
+                  </TableCell>
+                  <TableCell className="py-3 text-right tabular-nums">{wf.node_count ?? "-"}</TableCell>
+                  <TableCell className="py-3 text-sm text-muted-foreground">{formatDate(wf.updated_at)}</TableCell>
+                  <TableCell className="py-3">
+                    <div className="flex flex-wrap gap-1.5">
+                      {(wf.tags ?? []).slice(0, 3).map((tag) => (
+                        <Badge
+                          key={`${wf.workflow_id}-${tag}`}
+                          variant="outline"
+                          className="text-[11px]"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            applyFilters({ tag });
+                          }}
+                        >
+                          {tag}
+                        </Badge>
+                      ))}
+                      {(wf.tags?.length ?? 0) > 3 && (
+                        <Badge variant="outline" className="text-[11px]">
+                          +{(wf.tags?.length ?? 0) - 3}
+                        </Badge>
+                      )}
+                    </div>
+                  </TableCell>
                 </TableRow>
-              </TableHeader>
-              <TableBody>
-                {workflows.map((wf) => (
-                  <TableRow
-                    key={wf.workflow_id}
-                    className="cursor-pointer"
-                    data-testid={`row-workflow-${wf.workflow_id}`}
-                  >
-                    <TableCell colSpan={6} className="p-0">
-                      <Link
-                        href={`/workflows/${wf.workflow_id}`}
-                        className="grid grid-cols-[auto_1fr_auto_auto_auto_auto] items-center w-full"
-                        data-testid={`link-workflow-${wf.workflow_id}`}
-                      >
-                        <span className="font-mono text-xs text-muted-foreground p-4">
-                          {wf.workflow_id}
-                        </span>
-                        <span className="p-4">
-                          <span className="flex items-center gap-2">
-                            <GitBranch className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
-                            <span className="font-medium" data-testid={`text-workflow-name-${wf.workflow_id}`}>{wf.name}</span>
-                            {wf.is_archived && (
-                              <Archive className="w-3.5 h-3.5 text-muted-foreground" />
-                            )}
-                          </span>
-                        </span>
-                        <span className="p-4">
-                          <Badge
-                            variant={wf.active ? "default" : "secondary"}
-                            data-testid={`badge-status-${wf.workflow_id}`}
-                          >
-                            {wf.active ? "Active" : "Inactive"}
-                          </Badge>
-                        </span>
-                        <span className="p-4 text-right tabular-nums">
-                          {wf.node_count ?? "—"}
-                        </span>
-                        <span className="p-4 text-muted-foreground text-sm">
-                          {formatDate(wf.updated_at)}
-                        </span>
-                        <span className="p-4 text-muted-foreground text-sm">
-                          {formatDate(wf.last_seen_at)}
-                        </span>
-                      </Link>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          ) : (
-            <div className="flex flex-col items-center justify-center py-16 text-muted-foreground">
-              <GitBranch className="w-10 h-10 mb-3 opacity-30" />
-              <p className="text-sm">
-                {searchValue ? "No workflows match your search" : "No workflows found"}
-              </p>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+              ))}
+            </TableBody>
+          </Table>
+        ) : (
+          <div className="flex flex-col items-center justify-center py-16 text-muted-foreground">
+            <GitBranch className="w-10 h-10 mb-3 opacity-30" />
+            <p className="text-sm">
+              {hasActiveFilters ? "No workflows match your filters" : "No workflows found"}
+            </p>
+          </div>
+        )}
+      </DataTableFrame>
     </div>
   );
 }
 
+function FilterPill({
+  active,
+  label,
+  onClick,
+}: {
+  active: boolean;
+  label: string;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={[
+        "rounded-md border px-2.5 py-1 text-xs transition-colors",
+        active
+          ? "border-fit-blue bg-fit-blue text-white"
+          : "border-fit-blue/25 bg-white text-fit-navy hover:bg-fit-silver",
+      ].join(" ")}
+    >
+      {label}
+    </button>
+  );
+}
+
 function formatDate(dateStr: string | null | undefined): string {
-  if (!dateStr) return "—";
+  if (!dateStr) return "-";
   try {
     const d = new Date(dateStr);
     return d.toLocaleDateString("en-US", {

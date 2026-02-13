@@ -9,6 +9,7 @@
     "start": "cross-env NODE_ENV=production node dist/index.cjs",
     "typecheck": "tsc --noEmit",
     "lint": "tsc --noEmit",
+    "mcp:playwright": "npx -y @playwright/mcp@latest --headless",
     "check": "npm run typecheck",
     "db:push": "drizzle-kit push"
   },

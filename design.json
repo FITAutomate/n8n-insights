@@ -1,0 +1,72 @@
+{
+  "meta": {
+    "projectName": "FIT n8n Insights",
+    "version": "0.1",
+    "description": "Single Source of Truth for FIT Automate UI Design Systems",
+    "lastUpdated": "2026-01-12"
+  },
+  "colors": {
+    "palette": {
+      "fit-blue": "#007CE8",
+      "fit-green": "#1CD000",
+      "fit-navy": "#00003D",
+      "fit-silver": "#F3F4F7",
+      "fit-blue-deep": "#00449B",
+      "white": "#FFFFFF"
+    },
+    "semantic": {
+      "primary": "fit-blue",
+      "secondary": "fit-green",
+      "background": {
+        "page": "fit-blue",
+        "subtle": "fit-silver",
+        "dark": "fit-navy"
+      },
+      "text": {
+        "on-light": "fit-navy",
+        "on-dark": "white",
+        "muted-on-light": "fit-navy",
+        "muted-on-dark": "fit-silver",
+        "highlight": "fit-blue"
+      },
+      "border": {
+        "subtle": "fit-blue",
+        "accent": "fit-green"
+      }
+    },
+    "gradients": {
+      "ctaCard": "linear-gradient(180deg, rgba(0,124,232,0.95) 0%, rgba(0,0,61,1) 100%)"
+    }
+  },
+  "typography": {
+    "fontFamily": {
+      "heading": "Poppins, sans-serif",
+      "body": "Open Sans, sans-serif"
+    },
+    "fontWeight": {
+      "regular": 400,
+      "medium": 500,
+      "semibold": 600,
+      "bold": 700
+    },
+    "scale": {
+      "h1": "2.25rem",
+      "h2": "1.875rem",
+      "h3": "1.5rem",
+      "body": "1rem",
+      "small": "0.875rem"
+    }
+  },
+  "radius": {
+    "sm": "6px",
+    "md": "8px",
+    "lg": "12px"
+  },
+  "spacing": {
+    "xs": "4px",
+    "sm": "8px",
+    "md": "16px",
+    "lg": "24px",
+    "xl": "32px"
+  }
+}
