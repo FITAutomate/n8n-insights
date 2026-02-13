@@ -218,6 +218,7 @@ Evidence captured (2026-02-13)
 - [x] 7.6 UI polish + hardening.
 - [x] 7.7 Content primitives (`CodeBlock`, `MermaidBlock`, generated snippets from workflow graph data).
 - [x] 7.8 Light/dark theme system (FIT token-aware toggle and persistence).
+- [x] 7.9 Logo/header enhancement + code syntax highlighting polish.
 
 Acceptance criteria
 - Working demo: each sub-milestone ships with build/type/lint pass.
@@ -238,6 +239,7 @@ Evidence captured (2026-02-13)
 - 7.6 completed with table/readability polish, wrapped error payload UX, and docs/runtime hardening notes.
 - 7.7 completed with reusable content primitives, Mermaid rendering support, and starter `/snippets` page.
 - 7.8 completed with persisted light/dark mode toggle in shell header and token-aware dark style adjustments.
+- 7.9 completed with header/sidebar branding accents and Prism-based syntax highlighting in code snippets.
 
 Notes
 - Keep runtime configuration Supabase-focused for this repo.

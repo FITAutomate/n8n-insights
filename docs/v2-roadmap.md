@@ -13,6 +13,7 @@ Purpose: track near-term UX and content capabilities after milestone-driven v2 r
 - 7.6 UI polish + hardening
 - 7.7 content primitives for code/diagram pages
 - 7.8 light/dark theme system
+- 7.9 logo/header enhancement + snippet readability polish
 
 Recommended execution order for remaining milestones: 7.6 -> 7.8 -> 7.7.
 

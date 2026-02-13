@@ -25,7 +25,10 @@ export function AppSidebar() {
           <div className="fit-sidebar-brand cursor-pointer">
             <img src={logoPath} alt="Forward IT Thinking" className="h-8 w-auto self-start" />
             <div className="flex flex-col">
-              <span className="font-heading text-sm font-semibold text-sidebar-foreground">n8n Insights</span>
+              <span className="font-heading text-sm font-semibold text-sidebar-foreground">
+                <span aria-hidden="true">🔦 </span>
+                <span>n8n Insights</span>
+              </span>
               <span className="text-[11px] tracking-[0.10em] uppercase text-sidebar-foreground/70">
                 FIT Automate
               </span>

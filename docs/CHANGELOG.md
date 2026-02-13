@@ -2,6 +2,8 @@
 
 ## 2026-02-13
 
+- Milestone 7.9 logo/header enhancement: added playful FIT flashlight emoji accents in header/sidebar branding, including inward-facing right light via `fit-emoji-flip` utility.
+- Upgraded `CodeBlock` to real syntax-highlighted rendering using PrismJS (Python/TypeScript/JavaScript/JSON/Bash) with FIT-tuned token colors.
 - Added env-specific schema routing for Supabase clients (`SUPABASE_DB_SCHEMA_*`) so `demo` can use a separate schema contract without code changes.
 - Added callout variants for 7.7 notes UX (`note`, `success/tip`, `warning`, `danger`) with support for static and collapsible blocks.
 - Extended runtime environment selector and server env parsing to support `demo` mode (`dev|demo|prod`) with server-side Supabase demo overrides.

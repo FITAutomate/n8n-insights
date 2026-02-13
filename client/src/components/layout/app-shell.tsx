@@ -15,7 +15,9 @@ export function AppShell({ children }: { children: ReactNode }) {
                 Forward IT Thinking
               </p>
               <h1 className="font-heading text-lg leading-tight text-fit-navy dark:text-fit-silver">
-                n8n Insights
+                <span className="mr-1.5" aria-hidden="true">🔦</span>
+                <span>n8n Insights</span>
+                <span className="ml-1.5 inline-block fit-emoji-flip" aria-hidden="true">🔦</span>
               </h1>
             </div>
           </div>

@@ -304,6 +304,65 @@
   background-color: rgba(255, 255, 255, 0.08);
 }
 
+.fit-emoji-flip {
+  transform: scaleX(-1);
+}
+
+.fit-code-theme .token.comment,
+.fit-code-theme .token.prolog,
+.fit-code-theme .token.doctype,
+.fit-code-theme .token.cdata {
+  color: #7f8fa6;
+}
+
+.fit-code-theme .token.punctuation {
+  color: #cfd9ff;
+}
+
+.fit-code-theme .token.property,
+.fit-code-theme .token.tag,
+.fit-code-theme .token.boolean,
+.fit-code-theme .token.number,
+.fit-code-theme .token.constant,
+.fit-code-theme .token.symbol,
+.fit-code-theme .token.deleted {
+  color: #8be9fd;
+}
+
+.fit-code-theme .token.selector,
+.fit-code-theme .token.attr-name,
+.fit-code-theme .token.string,
+.fit-code-theme .token.char,
+.fit-code-theme .token.builtin,
+.fit-code-theme .token.inserted {
+  color: #9eff80;
+}
+
+.fit-code-theme .token.operator,
+.fit-code-theme .token.entity,
+.fit-code-theme .token.url,
+.fit-code-theme .language-css .token.string,
+.fit-code-theme .style .token.string {
+  color: #f8f8f2;
+}
+
+.fit-code-theme .token.atrule,
+.fit-code-theme .token.attr-value,
+.fit-code-theme .token.keyword {
+  color: #6cb6ff;
+}
+
+.fit-code-theme .token.function,
+.fit-code-theme .token.class-name {
+  color: #ffd479;
+}
+
+.fit-code-theme .token.regex,
+.fit-code-theme .token.important,
+.fit-code-theme .token.variable {
+  color: #ff9f7a;
+}
+
 /**
  * Using the elevate system.
  * Automatic contrast adjustment.
