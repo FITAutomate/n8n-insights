@@ -7,6 +7,7 @@ import {
   Camera,
   Check,
   Copy,
+  FileCode2,
   WrapText,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -82,12 +83,20 @@ export default function WorkflowDetailPage({ workflowId }: { workflowId: string 
         title={workflow.name}
         description={`Workflow ID: ${workflow.workflow_id}`}
         actions={
-          <Link href="/workflows">
-            <Button variant="ghost" size="sm" data-testid="button-back-workflows">
-              <ArrowLeft className="w-4 h-4 mr-1" />
-              Back
-            </Button>
-          </Link>
+          <div className="flex items-center gap-2">
+            <Link href={`/snippets?workflowId=${encodeURIComponent(workflow.workflow_id)}`}>
+              <Button variant="outline" size="sm" data-testid="button-generate-snippets">
+                <FileCode2 className="w-4 h-4 mr-1" />
+                Generate Snippets
+              </Button>
+            </Link>
+            <Link href="/workflows">
+              <Button variant="ghost" size="sm" data-testid="button-back-workflows">
+                <ArrowLeft className="w-4 h-4 mr-1" />
+                Back
+              </Button>
+            </Link>
+          </div>
         }
       >
         <div className="mt-3 flex items-center gap-2">

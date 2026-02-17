@@ -59,3 +59,20 @@ This should be generated server-side and persisted as derived artifacts, not ad-
 - Versioned snippet history linked to `latest_definition_hash`.
 - Export buttons: Markdown, Mermaid `.mmd`, Python `.py`, TypeScript `.ts`.
 - Lightweight review queue before publishing generated snippets to shared docs.
+
+## Milestone 8B (In Progress)
+
+Goal: move snippets from static demos to generated, workflow-scoped artifacts.
+
+Implemented kickoff scope:
+- New server endpoint: `GET /api/workflows/:workflowId/snippets`.
+- Generation source priority:
+  1. latest `workflow_snapshots.workflow_json`
+  2. fallback `workflow_nodes` + `workflow_connections` rows.
+- Generated outputs:
+  - Mermaid diagram
+  - Python pseudo-runner
+  - TypeScript pseudo-runner
+  - Markdown notes summary + warnings
+- `/snippets` now supports workflow selection and renders generated artifacts.
+- Workflow detail page adds direct link to generated snippets (`/snippets?workflowId=...`).

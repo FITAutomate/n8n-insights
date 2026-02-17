@@ -121,3 +121,22 @@ export interface ContentSnippet {
   tags?: string[];
   updatedAt?: string;
 }
+
+export interface GeneratedSnippetsMetadata {
+  generatorVersion: string;
+  generatedAt: string;
+  snapshotId?: string | null;
+  snapshotCapturedAt?: string | null;
+  nodeCount: number;
+  connectionCount: number;
+  warnings: string[];
+}
+
+export interface GeneratedWorkflowSnippetsResponse {
+  workflow: Pick<
+    N8nWorkflow,
+    "workflow_id" | "name" | "tags" | "node_count" | "latest_definition_hash" | "latest_snapshot_id" | "latest_snapshot_captured_at"
+  >;
+  metadata: GeneratedSnippetsMetadata;
+  snippets: ContentSnippet[];
+}

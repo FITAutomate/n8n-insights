@@ -241,6 +241,34 @@ Evidence captured (2026-02-13)
 - 7.8 completed with persisted light/dark mode toggle in shell header and token-aware dark style adjustments.
 - 7.9 completed with header/sidebar branding accents and Prism-based syntax highlighting in code snippets.
 
+## Milestone 8B - Generated Snippets from Inventory Data
+- [x] Add server-side snippet generation path from workflow inventory data.
+- [x] Add workflow-scoped snippet API endpoint.
+- [x] Replace static `/snippets` content with generated artifacts.
+- [x] Add direct workflow-detail action to open generated snippets.
+- [x] Confirm build/typecheck pass after integration.
+
+Acceptance criteria
+- Working demo:
+  - `GET /api/workflows/:workflowId/snippets` returns generated Python, TypeScript, Mermaid, and notes snippets.
+  - `/snippets` supports workflow selection and renders generated content.
+  - `/workflows/:workflowId` includes quick action to generated snippets.
+- Sample checks:
+  - `npm run typecheck`
+  - `npm run build`
+- Rollback plan:
+  - Revert Milestone 8B commit and restore static `/snippets` implementation.
+
+Evidence captured (2026-02-17)
+- New generator module: `server/snippet-generator.ts`.
+- New API endpoint: `server/routes/inventory.ts` (`/api/workflows/:workflowId/snippets`).
+- Shared response contracts added in `shared/schema.ts`.
+- Snippets UI migrated from static demo to generated workflow output in `client/src/pages/snippets.tsx`.
+- Workflow detail quick action added in `client/src/pages/workflow-detail.tsx`.
+- Quality gates passed:
+  - `npm run typecheck`
+  - `npm run build`
+
 Notes
 - Keep runtime configuration Supabase-focused for this repo.
 - Keep server-proxy pattern (`/api/*`) as the browser/server trust boundary.

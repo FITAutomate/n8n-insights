@@ -1,5 +1,13 @@
 # CHANGELOG
 
+## 2026-02-17
+
+- Milestone 8B kickoff: added server-side snippet generation from inventory data (`workflow_snapshots.workflow_json` with fallback to `workflow_nodes`/`workflow_connections`).
+- Added new endpoint `GET /api/workflows/:workflowId/snippets` for generated Python, TypeScript, Mermaid, and notes artifacts.
+- Replaced static `/snippets` sample page content with workflow-selectable generated output backed by the new API endpoint.
+- Added `Generate Snippets` action on workflow detail page linking directly to `/snippets?workflowId=<id>`.
+- Added shared contracts for generated snippets metadata/response in `shared/schema.ts`.
+
 ## 2026-02-13
 
 - Milestone 7.9 logo/header enhancement: added playful FIT flashlight emoji accents in header/sidebar branding, including inward-facing right light via `fit-emoji-flip` utility.

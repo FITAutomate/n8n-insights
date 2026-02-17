@@ -1,5 +1,6 @@
 import type { Express, Request } from "express";
 import { getSupabaseClient, isConfigured, getEnvStatus, parseInventoryEnv } from "../supabase";
+import { buildGeneratedSnippets } from "../snippet-generator";
 
 const REQUIRED_TABLES = [
   "workflows",
@@ -220,6 +221,93 @@ NOTIFY pgrst, 'reload schema';
       res.json(data ?? []);
     } catch (err: any) {
       res.status(500).json({ message: err.message });
+    }
+  });
+
+  app.get("/api/workflows/:workflowId/snippets", async (req, res) => {
+    const environment = parseInventoryEnv(singleQueryParam(req.query.env));
+    const supabase = getSupabaseClient(environment);
+
+    if (!supabase) {
+      return res.status(503).json({ message: "Supabase not configured" });
+    }
+
+    const { workflowId } = req.params;
+
+    try {
+      const { data: workflow, error: workflowError } = await supabase
+        .from("workflows_with_latest_snapshot")
+        .select("*")
+        .eq("workflow_id", workflowId)
+        .single();
+
+      if (workflowError || !workflow) {
+        return res.status(404).json({ message: workflowError?.message ?? "Workflow not found" });
+      }
+
+      const initialWarnings: string[] = [];
+
+      const { data: snapshotRows, error: snapshotError } = await supabase
+        .from("workflow_snapshots")
+        .select("*")
+        .eq("workflow_id", workflowId)
+        .order("captured_at", { ascending: false })
+        .limit(1);
+
+      if (snapshotError) {
+        initialWarnings.push(`Snapshot lookup failed: ${snapshotError.message}`);
+      }
+
+      const snapshot = (snapshotRows?.[0] ?? null) as Record<string, unknown> | null;
+      const latestSnapshotId = typeof workflow.latest_snapshot_id === "string"
+        ? workflow.latest_snapshot_id
+        : snapshot && typeof snapshot.snapshot_id === "string"
+          ? snapshot.snapshot_id
+          : snapshot && typeof snapshot.id === "string"
+            ? snapshot.id
+            : null;
+
+      const [nodesResult, connectionsResult] = await Promise.all([
+        supabase
+          .from("workflow_nodes")
+          .select("*")
+          .eq("workflow_id", workflowId)
+          .limit(5000),
+        supabase
+          .from("workflow_connections")
+          .select("*")
+          .eq("workflow_id", workflowId)
+          .limit(5000),
+      ]);
+
+      if (nodesResult.error) {
+        initialWarnings.push(`Node lookup failed: ${nodesResult.error.message}`);
+      }
+      if (connectionsResult.error) {
+        initialWarnings.push(`Connection lookup failed: ${connectionsResult.error.message}`);
+      }
+
+      const rawNodeRows = (nodesResult.data ?? []) as Record<string, unknown>[];
+      const rawConnectionRows = (connectionsResult.data ?? []) as Record<string, unknown>[];
+
+      const fallbackNodes = latestSnapshotId
+        ? rawNodeRows.filter((row) => row.snapshot_id === latestSnapshotId)
+        : rawNodeRows;
+      const fallbackConnections = latestSnapshotId
+        ? rawConnectionRows.filter((row) => row.snapshot_id === latestSnapshotId)
+        : rawConnectionRows;
+
+      const payload = buildGeneratedSnippets({
+        workflow: workflow as Record<string, unknown>,
+        snapshot,
+        fallbackNodes: fallbackNodes.length > 0 ? fallbackNodes : rawNodeRows,
+        fallbackConnections: fallbackConnections.length > 0 ? fallbackConnections : rawConnectionRows,
+        initialWarnings,
+      });
+
+      return res.json(payload);
+    } catch (err: any) {
+      return res.status(500).json({ message: err.message });
     }
   });
 
